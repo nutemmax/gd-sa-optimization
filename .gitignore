@@ -1,0 +1,11 @@
+# Ignore Python virtual environments
+venv_thesis/
+__pycache__/
+*.pyc
+
+# Ignore Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Ignore results/output folders
+results/
+*.log
