@@ -1,0 +1,54 @@
+gs-sa-optimization/
+├── notebooks/
+│   └── benchmark_analysis.ipynb
+│
+├── src/
+│   ├── optimizers/
+│   │   ├── gd.py
+│   │   ├── sa.py
+│   │   └── __init__.py
+│   │
+│   ├── problems/
+│   │   ├── benchmarks.py
+│   │   ├── ising.py               # optional split if desired
+│   │   └── __init__.py
+│   │
+│   ├── experiments/
+│   │   ├── benchmark_baseline.py
+│   │   ├── benchmark_best.py
+│   │   ├── ising_baseline.py
+│   │   ├── ising_best.py
+│   │   └── __init__.py
+│   │
+│   ├── utils/
+│   │   ├── bootstrap.py
+│   │   ├── metrics.py
+│   │   ├── io_helpers.py
+│   │   ├── common.py
+│   │   └── __init__.py
+│   │
+│   └── config/
+│       ├── best_hyperparams.json
+│       └── __init__.py
+│
+├── results/
+│   ├── analytical/
+│   │   ├── summary_rastrigin_exp3.csv
+│   │   ├── rastrigin_best.csv
+│   │   ├── rosenbrock_baseline.csv
+│   │   ├── ising_discrete_best.csv
+│   │   └── ising_relaxed_baseline.csv
+│   │
+│   └── plots/
+│       ├── convergence/
+│       │   ├── rastrigin_best_convergence_exp3.png
+│       │   └── ising_relaxed_baseline_convergence_exp2.png
+│       └── trajectory/
+│           ├── rosenbrock_3d_gd_exp3.png
+│           └── ackley_3d_sa_exp4.png
+│
+├── experiment_id.txt
+├── requirements.txt
+├── .gitignore
+├── README.md
+└── LICENSE
