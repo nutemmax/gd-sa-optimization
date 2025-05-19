@@ -1,17 +1,17 @@
-# benchmark_experiments_baseline.py
-
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
-from benchmarks import rosenbrock, rastrigin, ackley, grad_rosenbrock, grad_rastrigin, grad_ackley
-from sa import sa_continuous
-from gd import gradient_descent
-from utils import bootstrap_experiment, get_experiment_id, generate_summary_csv
+from src.problems.benchmarks import rosenbrock, rastrigin, ackley, grad_rosenbrock, grad_rastrigin, grad_ackley
+from src.optimizers.sa import sa_continuous
+from src.optimizers.gd import gradient_descent
+from src.utils.utils_experiments import bootstrap_experiment, get_experiment_id, generate_summary_csv
 
 # Paths
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 analytical_dir = os.path.join(base_dir, "results", "analytical")
 plots_dir = os.path.join(base_dir, "results", "plots")
 os.makedirs(analytical_dir, exist_ok=True)
@@ -43,7 +43,6 @@ gd_params = {
     "max_iter": 20000
 }
 
-
 def plot_best_convergence(name, sa_histories, gd_histories):
     sa_best_idx = np.argmin([hist[-1] for hist in sa_histories])
     gd_best_idx = np.argmin([hist[-1] for hist in gd_histories])
@@ -59,7 +58,6 @@ def plot_best_convergence(name, sa_histories, gd_histories):
     plt.savefig(os.path.join(plots_dir, f"{name}_baseline_parameters_convergence_exp{experiment_id}.png"))
     plt.close()
 
-
 def run_experiments():
     for name, (f, grad) in benchmarks.items():
         print(f"\nRunning experiments on {name}")
@@ -69,7 +67,6 @@ def run_experiments():
 
         generate_summary_csv(f"{name}_baseline_parameters", gd_results['stats'], sa_results['stats'], experiment_id, analytical_dir)
         plot_best_convergence(name, sa_results['histories'], gd_results['histories'])
-
 
 if __name__ == "__main__":
     run_experiments()
