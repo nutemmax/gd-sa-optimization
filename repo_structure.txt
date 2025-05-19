@@ -21,11 +21,7 @@ gs-sa-optimization/
 │   │   └── __init__.py
 │   │
 │   ├── utils/
-│   │   ├── bootstrap.py
-│   │   ├── metrics.py
-│   │   ├── io_helpers.py
-│   │   ├── common.py
-│   │   └── __init__.py
+│   │   ├── utils_experiments.py
 │   │
 │   └── config/
 │       ├── best_hyperparams.json
