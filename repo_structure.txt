@@ -18,6 +18,7 @@ gs-sa-optimization/
 │   │   ├── benchmark_best.py
 │   │   ├── ising_baseline.py
 │   │   ├── ising_best.py
+│   │   ├── select_best_hyperparams.py # select best hyperparams from the gridsearch results
 │   │   └── __init__.py
 │   │
 │   ├── utils/
@@ -36,12 +37,13 @@ gs-sa-optimization/
 │   │   └── ising_relaxed_baseline.csv
 │   │
 │   └── plots/
-│       ├── convergence/
-│       │   ├── rastrigin_best_convergence_exp3.png
-│       │   └── ising_relaxed_baseline_convergence_exp2.png
-│       └── trajectory/
-│           ├── rosenbrock_3d_gd_exp3.png
-│           └── ackley_3d_sa_exp4.png
+│       ├── ackley_baseline_parameters_convergence_exp1.png
+│       ├── rastrigin_baseline_parameters_convergence_exp1.png
+│       ├── rosenbrock_baseline_parameters_convergence_exp1.png
+│       ├── ackley_best_parameters_convergence_exp1.png
+│       ├── rastrigin_best_parameters_convergence_exp1.png
+│       ├── rosenbrock_best_parameters_convergence_exp1.png
+│       └── ising_baseline_parameters_convergence_exp1.png
 │
 ├── experiment_id.txt
 ├── requirements.txt

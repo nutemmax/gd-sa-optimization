@@ -1,25 +1,27 @@
 # benchmark_experiments_best.py
-
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from benchmarks import rosenbrock, rastrigin, ackley, grad_rosenbrock, grad_rastrigin, grad_ackley
-from gd import gradient_descent
-from sa import sa_continuous
-from utils import bootstrap_experiment, generate_summary_csv, get_experiment_id
+from src.problems.benchmarks import rosenbrock, rastrigin, ackley, grad_rosenbrock, grad_rastrigin, grad_ackley
+from src.optimizers.gd import gradient_descent
+from src.optimizers.sa import sa_continuous
+from src.utils.utils_experiments import bootstrap_experiment, generate_summary_csv, get_experiment_id
 
 # Paths
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-results_dir = os.path.join(base_dir, 'results')
+results_dir = os.path.join(base_dir, '..', 'results')
 plots_dir = os.path.join(results_dir, 'plots')
 analytical_dir = os.path.join(results_dir, 'analytical')
 os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
-with open(os.path.join(results_dir, 'best_hyperparams.json')) as f:
+with open(os.path.join(results_dir, 'gridsearch','best_hyperparams.json')) as f:
     best_params = json.load(f)
 
 benchmarks = {
