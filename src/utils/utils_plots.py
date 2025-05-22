@@ -3,6 +3,59 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import plotly.graph_objects as go
+import seaborn as sns
+from pathlib import Path
+
+
+def plot_spin_configuration(spin_array, title, save_path):
+    plt.figure(figsize=(6,6))
+    sns.heatmap(spin_array, cmap='coolwarm', cbar=False, square=True)
+    plt.title(title)
+    plt.axis('off')
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path)
+    plt.close()
+
+def plot_spin_evolution(history, lattice_shape, filename_prefix, save_dir):
+    """Plots evolution of spin states over time (discrete Ising)."""
+    os.makedirs(save_dir, exist_ok=True)
+    fig, axes = plt.subplots(1, len(history), figsize=(len(history)*2, 2))
+    if len(history) == 1:
+        axes = [axes]
+    for i, state in enumerate(history):
+        sns.heatmap(state.reshape(lattice_shape), cmap='coolwarm', cbar=False, square=True, ax=axes[i])
+        axes[i].set_title(f"t={i}")
+        axes[i].axis('off')
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, f"{filename_prefix}_spin_evolution.png"))
+    plt.close()
+
+def plot_energy_trajectory(energy_list, filename_prefix, save_dir):
+    """Plots energy over iterations."""
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(8, 5))
+    plt.plot(energy_list, label='Energy')
+    plt.xlabel("Iteration")
+    plt.ylabel("Energy")
+    plt.title(f"Energy Evolution: {filename_prefix}")
+    plt.grid(True)
+    plt.legend()
+    plt.savefig(os.path.join(save_dir, f"{filename_prefix}_energy_trajectory.png"))
+    plt.close()
+
+
+def plot_final_spin_config(spin_config, filename_prefix, save_dir):
+    """Plots the final configuration of spin states (discrete or relaxed)."""
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(6, 6))
+    sns.heatmap(spin_config, cmap='coolwarm', cbar=True, square=True)
+    plt.title("Final Configuration")
+    plt.axis("off")
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, f"{filename_prefix}_final_spin_config.png"))
+    plt.close()
+
 
 def plot_convergence_curve(gd_f_history, sa_f_history, benchmark_name, experiment_id, plots_dir):
     plt.figure(figsize=(10, 6))

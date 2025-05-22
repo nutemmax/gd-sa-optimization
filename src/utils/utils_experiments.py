@@ -84,6 +84,82 @@ def bootstrap_experiment(
     is_discrete=False,
     best_state=None,
     hamming_threshold=0,
+    x_init_strategy=None,
+    dim=None,
+    **kwargs
+):
+    """
+    Runs the optimization algorithm multiple times and collects summary statistics.
+
+    Returns:
+        dict: {
+            'final_values': [...],
+            'final_states': [...],
+            'stats': {...},
+            'epsilon': float or None,
+            'near_optimal_count': int or None,
+            'state_histories': [...],
+            'energy_histories': [...],
+            'runtimes': [...]
+        }
+    """
+    final_values = []
+    final_states = []
+    state_histories = []
+    energy_histories = []
+    runtimes = []
+
+    for i in range(1, runs + 1):
+        print(f'Run {i}/{runs}...', flush=True)
+        start_time = time.time()
+
+        current_kwargs = kwargs.copy()
+
+        # only apply x_init_strategy if needed
+        if x_init_strategy is not None:
+            if "x_init" in current_kwargs and current_kwargs["x_init"] is None:
+                inferred_dim = dim if dim is not None else 2  # fallback if dim is not passed
+                current_kwargs["x_init"] = x_init_strategy(inferred_dim)
+
+        final_solution, history, f_history = algorithm_function(*args, **current_kwargs)
+
+        duration = time.time() - start_time
+        final_value = f_history[-1]
+
+        final_values.append(final_value)
+        final_states.append(final_solution)
+        state_histories.append(history)
+        energy_histories.append(f_history)
+        runtimes.append(duration)
+
+    if is_discrete:
+        stats = evaluate_discrete_results(final_states, best_state, threshold=hamming_threshold)
+        epsilon = None
+        near_optimal_count = None
+    else:
+        stats = evaluate_continuous_results(final_values)
+        epsilon = stats['epsilon']
+        near_optimal_count = stats['near_optimal_count']
+
+    return {
+        'final_values': final_values,
+        'final_states': final_states,
+        'stats': stats,
+        'epsilon': epsilon,
+        'near_optimal_count': near_optimal_count,
+        'histories': state_histories,
+        'f_histories': energy_histories,
+        'runtimes': runtimes
+    }
+
+def bootstrap_experiment_old(
+    algorithm_function,
+    runs,
+    *args,
+    f=None,
+    is_discrete=False,
+    best_state=None,
+    hamming_threshold=0,
     **kwargs
 ):
     """
@@ -145,7 +221,6 @@ def bootstrap_experiment(
         'histories': histories,
         'runtimes': runtimes
     }
-
 
 # --------------------------------
 # Experiment ID & Result Saving

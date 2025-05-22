@@ -11,7 +11,8 @@ import pandas as pd
 from src.optimizers.sa import sa_continuous, sa_discrete
 from src.optimizers.gd import gradient_descent
 from src.problems.ising import ising_energy, relaxed_ising_energy, grad_relaxed_ising
-from src.utils.utils_experiments import bootstrap_experiment, get_experiment_id
+from src.utils.utils_experiments import bootstrap_experiment, get_experiment_id, evaluate_discrete_results
+from src.utils.utils_plots import plot_spin_evolution, plot_energy_trajectory, plot_final_spin_config
 
 # === Paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,18 +27,21 @@ with open(os.path.join(gridsearch_dir, "best_hyperparams.json")) as f:
     best_params = json.load(f)
 
 # === Shared settings ===
-num_runs = 50
+num_runs = 5
 tol = 1e-6
 lattice_shape = (10, 10)
 experiment_id = get_experiment_id()
 
-def plot_combined_convergence(name, sa_histories, gd_histories):
-    sa_best = min(sa_histories, key=lambda h: h[-1])
-    gd_best = min(gd_histories, key=lambda h: h[-1])
+def plot_combined_convergence(name, sa_histories, gd_histories, relaxed_f):
+    sa_best = min(sa_histories, key=lambda h: relaxed_f(h[-1]))
+    gd_best = min(gd_histories, key=lambda h: relaxed_f(h[-1]))
+
+    sa_energies = [relaxed_f(x) for x in sa_best]
+    gd_energies = [relaxed_f(x) for x in gd_best]
 
     plt.figure(figsize=(10, 6))
-    plt.plot(sa_best, label="SA (Best Run)")
-    plt.plot(gd_best, label="GD (Best Run)")
+    plt.plot(sa_energies, label="SA (Best Run)", linewidth=2)
+    plt.plot(gd_energies, label="GD (Best Run)", linewidth=2)
     plt.xlabel("Iteration")
     plt.ylabel("Energy")
     plt.title(f"Best Run Convergence - {name} (Best Params)")
@@ -50,12 +54,33 @@ def run_experiments():
     # === Discrete Ising ===
     print("Running SA on discrete Ising (best params)")
     sa_disc_p = best_params["ising"]["ising_discrete"]["sa"]
-    sa_disc = bootstrap_experiment(sa_discrete, num_runs, ising_energy, lattice_size=lattice_shape,
-                                    T_init=sa_disc_p["T0"], alpha=sa_disc_p["alpha"], max_iter=20000,
-                                    tol=tol, is_discrete=False, f=ising_energy)
-    sa_disc_stats = sa_disc["stats"]
-    if isinstance(sa_disc_stats, float):
-        sa_disc_stats = {"near_optimal_proportion": sa_disc_stats}
+    sa_disc = bootstrap_experiment(
+        sa_discrete,
+        num_runs,
+        ising_energy,
+        lattice_size=lattice_shape,
+        T_init=sa_disc_p["T0"],
+        alpha=sa_disc_p["alpha"],
+        max_iter=20000,
+        tol=tol,
+        is_discrete=True,
+        f=ising_energy,
+        best_state=None  # temporary
+    )
+
+    # Determine best run and update stats
+    best_sa_run = min(sa_disc["histories"], key=lambda h: ising_energy(h[-1]))
+    sa_disc["stats"] = evaluate_discrete_results(sa_disc["final_states"], best_sa_run[-1])
+
+    plot_final_spin_config(best_sa_run[-1].reshape(lattice_shape), f"ising_discrete_best_exp{experiment_id}", plots_dir)
+    plot_energy_trajectory([ising_energy(x.reshape(lattice_shape)) for x in best_sa_run],
+                           f"ising_discrete_best_exp{experiment_id}", plots_dir)
+
+    if isinstance(sa_disc["stats"], float):
+        sa_disc_stats = {"near_optimal_proportion": sa_disc["stats"]}
+    else:
+        sa_disc_stats = sa_disc["stats"]
+
     pd.DataFrame([{"Algorithm": "SA", **sa_disc_stats}]).to_csv(
         os.path.join(analytical_dir, f"summary_ising_discrete_best_exp{experiment_id}.csv"), index=False)
 
@@ -63,20 +88,50 @@ def run_experiments():
     print("Running SA and GD on relaxed Ising (best params)")
     relaxed_f = lambda x: relaxed_ising_energy(x.reshape(lattice_shape))
     grad_wrapped = lambda x: grad_relaxed_ising(x.reshape(lattice_shape)).flatten()
-    init_point = np.random.uniform(-1, 1, size=lattice_shape).flatten()
+
+    dim_ising = lattice_shape[0] * lattice_shape[1]
+    init_strategy = lambda d: np.random.uniform(-1, 1, size=d)
 
     sa_p = best_params["ising"]["ising_relaxed"]["sa"]
     gd_p = best_params["ising"]["ising_relaxed"]["gd"]
 
-    sa_relaxed = bootstrap_experiment(sa_continuous, num_runs, relaxed_f, x_init=init_point,
-        T0=sa_p["T0"], alpha=sa_p["alpha"], step_size=sa_p["step_size"],
-        max_iter=20000, tol=tol, bounds=[(-2, 2)] * (lattice_shape[0] * lattice_shape[1]),
-        perturbation_method="normal", adaptive_step_size=False)
+    sa_relaxed = bootstrap_experiment(
+        sa_continuous,
+        num_runs,
+        relaxed_f,
+        x_init=None,
+        x_init_strategy=init_strategy,
+        dim=dim_ising,
+        T0=sa_p["T0"],
+        alpha=sa_p["alpha"],
+        step_size=sa_p["step_size"],
+        max_iter=20000,
+        tol=tol,
+        bounds=[(-2, 2)] * dim_ising,
+        perturbation_method="normal",
+        adaptive_step_size=False
+    )
 
-    gd_relaxed = bootstrap_experiment(gradient_descent, num_runs, relaxed_f, grad_wrapped,
-        x_init=init_point, lr=gd_p["lr"], max_iter=20000, tol=tol)
+    gd_relaxed = bootstrap_experiment(
+        gradient_descent,
+        num_runs,
+        relaxed_f,
+        grad_wrapped,
+        x_init=None,
+        x_init_strategy=init_strategy,
+        dim=dim_ising,
+        lr=gd_p["lr"],
+        max_iter=20000,
+        tol=tol
+    )
 
-    plot_combined_convergence("ising_relaxed", sa_relaxed["histories"], gd_relaxed["histories"])
+    best_sa_relaxed = min(sa_relaxed["histories"], key=lambda h: relaxed_f(h[-1]))
+    best_gd_relaxed = min(gd_relaxed["histories"], key=lambda h: relaxed_f(h[-1]))
+
+    plot_energy_trajectory([relaxed_f(x) for x in best_sa_relaxed],
+                           f"ising_relaxed_SA_best_exp{experiment_id}", plots_dir)
+
+    plot_combined_convergence("ising_relaxed", sa_relaxed["histories"], gd_relaxed["histories"], relaxed_f)
 
     pd.DataFrame([
         {"Algorithm": "GD", **gd_relaxed["stats"]},
