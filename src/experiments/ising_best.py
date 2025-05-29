@@ -153,6 +153,49 @@ def run_experiments():
         index=False
     )
 
+    # SAVE FINAL ENERGIES PER RUN
+    final_energy_data = []
+
+    # Add SA entries
+    for i, val in enumerate(sa_final_values):
+        final_energy_data.append({
+            "Run": i + 1,
+            "Algorithm": "SA",
+            "FinalEnergy": val,
+            "T0": sa_p["T0"],
+            "alpha": sa_p["alpha"],
+            "step_size": sa_p["step_size"]
+        })
+
+    # Add GD entries
+    for i, val in enumerate(gd_final_values):
+        final_energy_data.append({
+            "Run": i + 1,
+            "Algorithm": "GD",
+            "FinalEnergy": val,
+            "lr": gd_p["lr"]
+        })
+
+    df_final_energies = pd.DataFrame(final_energy_data)
+    df_final_energies.to_csv(
+        os.path.join(analytical_dir, f"final_energies_ising_relaxed_best_exp{experiment_id}.csv"),
+        index=False
+    )
+
+    # HISTOGRAM FINAL ENERGIES
+    plt.figure(figsize=(10, 6))
+    plt.hist(sa_final_values, bins=20, alpha=0.6, label="SA")
+    plt.hist(gd_final_values, bins=20, alpha=0.6, label="GD")
+    plt.xlabel("Final Energy")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Final Energies (Best Params)")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, f"hist_final_energies_ising_relaxed_best_exp{experiment_id}.png"))
+    plt.close()
+
+
 if __name__ == "__main__":
     run_experiments()
     print("All best-param Ising experiments complete.")

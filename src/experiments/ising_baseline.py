@@ -144,6 +144,48 @@ def run_experiments():
         os.path.join(analytical_dir, f"summary_ising_relaxed_baseline_exp{experiment_id}.csv"),
         index=False
     )
+    # === Save final energies per run (baseline) ===
+    final_energy_data = []
+
+    # Add SA entries
+    for i, val in enumerate(sa_final_values):
+        final_energy_data.append({
+            "Run": i + 1,
+            "Algorithm": "SA",
+            "FinalEnergy": val,
+            "T0": sa_cont_params["T0"],
+            "alpha": sa_cont_params["alpha"],
+            "step_size": sa_cont_params["step_size"]
+        })
+
+    # Add GD entries
+    for i, val in enumerate(gd_final_values):
+        final_energy_data.append({
+            "Run": i + 1,
+            "Algorithm": "GD",
+            "FinalEnergy": val,
+            "lr": gd_params["lr"]
+        })
+
+    df_final_energies = pd.DataFrame(final_energy_data)
+    df_final_energies.to_csv(
+        os.path.join(analytical_dir, f"final_energies_ising_relaxed_baseline_exp{experiment_id}.csv"),
+        index=False
+    )
+
+    # === Plot histogram of final energies (baseline) ===
+    plt.figure(figsize=(10, 6))
+    plt.hist(sa_final_values, bins=20, alpha=0.6, label="SA")
+    plt.hist(gd_final_values, bins=20, alpha=0.6, label="GD")
+    plt.xlabel("Final Energy")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Final Energies (Baseline Params)")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, f"hist_final_energies_ising_relaxed_baseline_exp{experiment_id}.png"))
+    plt.close()
+
 
 if __name__ == "__main__":
     run_experiments()
