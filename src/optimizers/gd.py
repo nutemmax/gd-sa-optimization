@@ -18,24 +18,6 @@ def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None, 
         history (list of np.array): Iteration history of x.
         f_history (list of float): Function values per iteration.
     """
-    # dimension and function-specific clip/init ranges
-    # if x_init is not None:
-    #     dim = len(x_init)
-    # else:
-    #     dim = 2
-
-    # if dim == 2 and f.__name__.lower() == 'rosenbrock':
-    #     init_range = (-2, 2)
-    #     clip_range = (-2, 2)
-    # else:
-    #     init_range = (-5, 5)
-    #     clip_range = (-5, 5)
-
-    # initialize x
-    # x = np.array(x_init if x_init is not None else np.random.uniform(*init_range, size=dim), dtype=float)
-    # history = [x.copy()]
-    # f_history = []
-
     # determine dim
     if x_init is not None:
         dim = len(x_init)
@@ -45,7 +27,10 @@ def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None, 
 
     # initialize x
     x = np.array(x_init, dtype=float)
-    clip_range = init_range  # use same range for clipping
+    if dim == 10 or dim == 100  :
+        clip_range = (-1,1)
+    else : 
+        clip_range = init_range  # use same range for clipping
     print(f"Clip range : {clip_range}")
     history = [x.copy()]
     f_history = []

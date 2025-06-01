@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from src.problems.benchmarks import rosenbrock, rastrigin, ackley, grad_rosenbrock, grad_rastrigin, grad_ackley
 from src.optimizers.sa import sa_continuous
 from src.optimizers.gd import gradient_descent
-from src.utils.utils_experiments import bootstrap_experiment, get_experiment_id, generate_summary_csv
+from src.utils.utils_experiments import bootstrap_experiment_benchmarks, get_experiment_id, generate_summary_csv
 
 # Paths
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,11 +24,11 @@ benchmarks = {
 }
 
 init_point = None
-bounds = [(-5, 5), (-5, 5)]
 tol = 1e-6
 perturbation_method = "normal"
 adaptive_step_size = False
 num_runs = 5
+dim = 2
 experiment_id = get_experiment_id()
 
 sa_params = {
@@ -73,33 +73,37 @@ def run_experiments():
         else:
             init_range = (-5, 5)
 
-        gd_results = bootstrap_experiment(
-            gradient_descent,
-            num_runs,
-            f,
-            grad,
-            **gd_params,
-            init_range=init_range,  # passed to GD
-            tol=tol,
-            x_init=init_point,
+        # pre-generate the same initializations for all runs
+        inits = [np.random.uniform(*init_range, size=dim) for _ in range(num_runs)]
+
+        # === GD ===
+        gd_results = bootstrap_experiment_benchmarks(
+            algorithm_function=gradient_descent,
+            runs=num_runs,
+            f=f,
+            grad_f=grad,
+            dim=dim,
+            x_inits = inits,
+            name=name,
             f_star=0.0,
             x_star=np.zeros(2),
-            dim=2
+            **gd_params
         )
 
-        sa_results = bootstrap_experiment(
-            sa_continuous,
-            num_runs,
-            f,
-            **sa_params,
-            tol=tol,
-            x_init=init_point,
-            bounds=bounds,
-            perturbation_method=perturbation_method,
-            adaptive_step_size=adaptive_step_size,
+        # === SA ===
+        sa_results = bootstrap_experiment_benchmarks(
+            algorithm_function=sa_continuous,
+            runs=num_runs,
+            f=f,
+            dim=2,
+            x_inits = inits,
+            name=name,
             f_star=0.0,
             x_star=np.zeros(2),
-            dim=2
+            tol=tol,
+            perturbation_method=perturbation_method,
+            adaptive_step_size=adaptive_step_size,
+            **sa_params
         )
 
         generate_summary_csv(f"{name}_baseline_parameters", gd_results['stats'], sa_results['stats'], experiment_id, analytical_dir)

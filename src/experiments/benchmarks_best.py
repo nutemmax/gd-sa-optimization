@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from src.problems.benchmarks import rosenbrock, rastrigin, ackley, grad_rosenbrock, grad_rastrigin, grad_ackley
 from src.optimizers.gd import gradient_descent
 from src.optimizers.sa import sa_continuous
-from src.utils.utils_experiments import bootstrap_experiment, generate_summary_csv, get_experiment_id
+from src.utils.utils_experiments import bootstrap_experiment_benchmarks, generate_summary_csv, get_experiment_id
 
 # Paths
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,12 +31,12 @@ benchmarks = {
 }
 
 init_point = None
-bounds = [(-5, 5), (-5, 5)]
 tol = 1e-6
 perturbation_method = 'normal'
 adaptive_step_size = False
-num_runs = 50
+num_runs = 5
 experiment_id = get_experiment_id()
+dim = 2
 
 
 def plot_best_convergence(name, sa_histories, gd_histories, f):
@@ -62,15 +62,51 @@ def run_experiments():
     for name, (f, grad) in benchmarks.items():
         print(f'Running {name}')
 
+        # select init range based on the benchmark
+        if name.lower() == "rosenbrock":
+            init_range = (-2, 2)
+        else:
+            init_range = (-5, 5)
+
         sa_p = best_params[name]['sa']
         gd_p = best_params[name]['gd']
 
-        sa_results = bootstrap_experiment(sa_continuous, num_runs, f, x_init=init_point, bounds=bounds, 
-                                          T0=sa_p['T0'], alpha=sa_p['alpha'], step_size=sa_p['step_size'],
-                                          tol=tol, max_iter=20000, f_star=0.0, x_star=np.zeros(2))
+        inits = [np.random.uniform(*init_range, size=dim) for _ in range(num_runs)]
 
-        gd_results = bootstrap_experiment(gradient_descent, num_runs, f, grad, 
-                                          lr=gd_p['lr'], tol=tol, max_iter=20000, x_init=init_point, f_star=0.0, x_star=np.zeros(2))
+        # === GD ====
+        gd_results = bootstrap_experiment_benchmarks(
+            algorithm_function=gradient_descent,
+            runs=num_runs,
+            f=f,
+            grad_f=grad,
+            dim=dim,
+            x_inits=inits,
+            name=name,
+            f_star=0.0,
+            x_star=np.zeros(2),
+            tol=tol,
+            lr=gd_p['lr'],
+            max_iter=20000,
+        )
+
+        # === SA ====
+        sa_results = bootstrap_experiment_benchmarks(
+            algorithm_function=sa_continuous,
+            runs=num_runs,
+            f=f,
+            dim=dim,
+            x_inits=inits,
+            name=name,
+            f_star=0.0,
+            x_star=np.zeros(2),
+            tol=tol,
+            perturbation_method=perturbation_method,
+            adaptive_step_size=adaptive_step_size,
+            T0=sa_p['T0'],
+            alpha=sa_p['alpha'],
+            step_size=sa_p['step_size'],
+            max_iter=20000
+        )
 
         generate_summary_csv(f'{name}_best_hyperparameters', gd_stats=gd_results['stats'], 
                              sa_stats=sa_results['stats'], experiment_id=experiment_id, save_dir=analytical_dir)

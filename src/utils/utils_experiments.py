@@ -4,6 +4,12 @@ import time
 import pandas as pd
 import time
 
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from src.problems.ising import ising_energy, relaxed_ising_energy, grad_relaxed_ising
+
 # -------------------------
 # Core Evaluation Functions
 # -------------------------
@@ -123,8 +129,153 @@ def compute_frequency_continuous(final_states, best_state, f):
 # --------------------------------
 # Bootstrapping
 # --------------------------------
+def bootstrap_experiment_benchmarks(
+    algorithm_function,
+    runs,
+    f,
+    grad_f=None,
+    dim=2,
+    x_inits = None,
+    f_star=0.0,
+    x_star=None,
+    name="benchmark",
+    **kwargs
+):
+    final_values = []
+    final_states = []
+    state_histories = []
+    energy_histories = []
+    runtimes = []
 
-def bootstrap_experiment(
+    # Initialization range
+    if name.lower() == "rosenbrock":
+        init_range = (-2, 2)
+    else:
+        init_range = (-5, 5)
+
+    for i in range(1, runs + 1):
+        print(f"[Benchmark] Run {i}/{runs}", flush=True)
+        start_time = time.time()
+
+        # pre-specified init if provided
+        x_init = x_inits[i - 1] if x_inits is not None else np.random.uniform(*init_range, size=dim)
+
+        # call the algorithm, passing init_range for GD to enable clipping
+        if grad_f is not None:
+            result = algorithm_function(f, grad_f, x_init=x_init, init_range=init_range, **kwargs)
+        else:
+            result = algorithm_function(f, x_init=x_init, init_range=init_range, **kwargs)
+
+        x_final, x_hist, f_hist = result
+        duration = time.time() - start_time
+
+        final_values.append(f_hist[-1])
+        final_states.append(x_final)
+        state_histories.append(x_hist)
+        energy_histories.append(f_hist)
+        runtimes.append(duration)
+
+    stats = evaluate_continuous_results(
+        final_values=final_values,
+        runtimes=runtimes,
+        final_states=final_states,
+        x_star=x_star,
+        f_star=f_star
+    )
+
+    return {
+        'final_values': final_values,
+        'final_states': final_states,
+        'stats': stats,
+        'epsilon': stats['epsilon'],
+        'near_optimal_count': stats['near_optimal_count'],
+        'histories': state_histories,
+        'f_histories': energy_histories,
+        'runtimes': runtimes
+    }
+
+
+def bootstrap_experiment_ising(
+    algorithm_function,
+    runs,
+    f,
+    grad_f = grad_relaxed_ising,
+    dim = 10,
+    x_inits = None, 
+    is_discrete=False,
+    best_state=None,
+    hamming_threshold=0,
+    f_star=0.0,
+    x_star=None,
+    name = "ising",
+    **kwargs
+):
+    final_values = []
+    final_states = []
+    state_histories = []
+    energy_histories = []
+    runtimes = []
+
+    for i in range(1, runs + 1):
+        print(f"[Ising {'Discrete' if is_discrete else 'Relaxed'}] Run {i}/{runs}", flush=True)
+        start_time = time.time()
+
+        # initialization
+        x_init = x_inits[i - 1] if x_inits is not None else (
+            np.random.choice([-1, 1], size=(dim, dim)) if is_discrete else np.random.uniform(-1, 1, size=(dim, dim))
+        )
+        kwargs.pop("x_init", None)  # Remove just in case
+
+        if is_discrete:
+            result = algorithm_function(f, x_init=x_init, **kwargs)
+        else:
+            if algorithm_function.__name__ == "gradient_descent":
+                result = algorithm_function(f, grad_f, x_init=x_init, **kwargs)
+            else:  # for sa_continuous or anything that does NOT take grad_f
+                result = algorithm_function(f, x_init=x_init, **kwargs)
+
+        x_final, x_hist, f_hist = result
+
+        duration = time.time() - start_time
+        final_values.append(f_hist[-1])
+        final_states.append(x_final)
+        state_histories.append(x_hist)
+        energy_histories.append(f_hist)
+        runtimes.append(duration)
+
+    if is_discrete:
+        stats = evaluate_discrete_results(
+            final_states=final_states,
+            best_state=best_state,
+            threshold=hamming_threshold,
+            runtimes=runtimes
+        )
+        epsilon = None
+        near_optimal_count = None
+    else:
+        stats = evaluate_continuous_results(
+            final_values=final_values,
+            runtimes=runtimes,
+            final_states=final_states,
+            x_star=x_star,
+            f_star=f_star
+        )
+        epsilon = stats['epsilon']
+        near_optimal_count = stats['near_optimal_count']
+
+    return {
+        'final_values': final_values,
+        'final_states': final_states,
+        'stats': stats,
+        'epsilon': epsilon,
+        'near_optimal_count': near_optimal_count,
+        'histories': state_histories,
+        'f_histories': energy_histories,
+        'runtimes': runtimes
+    }
+
+
+def bootstrap_experiment_old(
     algorithm_function,
     runs,
     *args,
@@ -160,7 +311,19 @@ def bootstrap_experiment(
     runtimes = []
 
     # fetch init_range from kwargs only once
-    init_range = kwargs.get("init_range", (-5,5))
+    # init_range = kwargs.get("init_range", (-5,5))
+    
+    if f is not None and hasattr(f, '__name__'):
+        fname = f.__name__.lower()
+        print(f"function name : {fname}")
+        if fname == "rosenbrock":
+            init_range = (-2, 2)
+        elif fname.startswith("ising"):
+            init_range = (-1, 1)
+        else:
+            init_range = (-5, 5)
+    else:
+        init_range = (-5, 5)
 
     for i in range(1, runs + 1):
         print(f'Run {i}/{runs}...', flush=True)

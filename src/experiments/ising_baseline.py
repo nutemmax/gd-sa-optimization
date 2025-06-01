@@ -12,7 +12,7 @@ from src.optimizers.sa import sa_continuous, sa_discrete
 from src.optimizers.gd import gradient_descent
 from src.problems.ising import ising_energy, relaxed_ising_energy, grad_relaxed_ising
 from src.utils.utils_plots import plot_spin_evolution, plot_energy_trajectory, plot_final_spin_config
-from src.utils.utils_experiments import bootstrap_experiment, get_experiment_id, evaluate_continuous_results, evaluate_discrete_results, generate_summary_csv
+from src.utils.utils_experiments import bootstrap_experiment_ising, get_experiment_id, evaluate_continuous_results, evaluate_discrete_results, generate_summary_csv
 
 # === Paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,17 +23,16 @@ os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
 # === Shared settings ===
-num_runs = 50
+num_runs = 5
 tol = 1e-6
 lattice_shape = (10, 10)
 experiment_id = get_experiment_id()
-dim_ising = lattice_shape[0] * lattice_shape[1]
+dim_ising = lattice_shape[0]
 
 # === Baseline Hyperparameters ===
 sa_disc_params = {"T_init": 50.0, "alpha": 0.99, "max_iter": 20000, "tol": tol}
 sa_cont_params = {
     "T0": 50.0, "alpha": 0.99, "step_size": 0.1, "max_iter": 20000, "tol": tol,
-    "bounds": [(-3, 3)] * dim_ising,
     "perturbation_method": "normal", "adaptive_step_size": False
 }
 gd_params = {"lr": 0.01, "max_iter": 20000}
@@ -60,15 +59,22 @@ def run_experiments():
     # === Discrete Ising ===
     print("Running SA on discrete Ising")
 
-    sa_disc = bootstrap_experiment(
-        sa_discrete,
-        num_runs,
-        ising_energy,
+    # shared init
+    x_inits_disc = [np.random.choice([-1, 1], size=lattice_shape) for _ in range(num_runs)]
+
+    sa_disc = bootstrap_experiment_ising(
+        algorithm_function=sa_discrete,
+        runs=num_runs,
+        f=ising_energy,
+        dim=dim_ising,
+        x_inits=x_inits_disc,
         lattice_size=lattice_shape,
-        **sa_disc_params,
-        is_discrete=False,
-        f=ising_energy
+        is_discrete=True,
+        best_state=None,
+        hamming_threshold=0,
+        **sa_disc_params
     )
+
     sa_disc["stats"] = evaluate_continuous_results(sa_disc["final_values"])
 
     best_sa_run = min(sa_disc['histories'], key=lambda h: ising_energy(h[-1]))
@@ -86,27 +92,38 @@ def run_experiments():
 
     # === Relaxed Ising: shared initialization ===
     print("Running SA and GD on relaxed Ising")
+    x_inits_cont = [np.random.uniform(-1, 1, size=lattice_shape) for _ in range(num_runs)]
+    x_inits_flat = [x.flatten() for x in x_inits_cont]
 
     relaxed_f = lambda x: relaxed_ising_energy(x.reshape(lattice_shape))
     grad_wrapped = lambda x: grad_relaxed_ising(x.reshape(lattice_shape)).flatten()
 
-    sa_results = bootstrap_experiment(sa_continuous, num_runs, relaxed_f, x_init=None, f_star=-200.0, x_star=None, dim = dim_ising,**sa_cont_params)
-    gd_x_init = np.random.uniform(-1, 1, size=lattice_shape[0] * lattice_shape[1])
-    gd_results = bootstrap_experiment(
-        gradient_descent,
-        num_runs,
-        relaxed_f,
-        grad_wrapped,
-        x_init=gd_x_init,
+    sa_results = bootstrap_experiment_ising(
+        algorithm_function=sa_continuous,
+        runs=num_runs,
+        f=relaxed_f,
+        dim=dim_ising,
+        x_inits=x_inits_cont,
         f_star=-200.0,
         x_star=None,
-        **gd_params)
-    
+        **sa_cont_params
+    )
+
+    gd_results = bootstrap_experiment_ising(
+        algorithm_function=gradient_descent,
+        runs=num_runs,
+        f=relaxed_f,
+        grad_f=grad_wrapped,
+        dim=dim_ising,
+        x_inits=x_inits_flat,
+        f_star=-200.0,
+        x_star=None,
+        **gd_params
+    )
 
     generate_summary_csv("ising_relaxed_baseline", gd_results["stats"], sa_results["stats"], experiment_id, analytical_dir)
-
     plot_combined_convergence("ising_relaxed", sa_results["histories"], gd_results["histories"], relaxed_f)
-
+    
     # === Save final energies per run ===
     final_energy_data = []
 

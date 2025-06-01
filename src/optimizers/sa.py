@@ -8,14 +8,14 @@ from src.problems.benchmarks import * # all functions
 def sa_continuous(
     f,
     x_init=None,
-    bounds=None,
     T0=10.0,
     alpha=0.99,
-    max_iter=1000,
+    max_iter=10000,
     tol=1e-6,
     step_size=0.5,
     perturbation_method='normal',
-    adaptive_step_size=False
+    adaptive_step_size=False,
+    init_range=(-5, 5)
 ):
     """
     Simulated Annealing for continuous optimization problems.
@@ -33,6 +33,7 @@ def sa_continuous(
         step_size (float): Step size for candidate generation.
         perturbation_method (str): `'normal'` or `'uniform'`.
         adaptive_step_size (bool): Whether step size decays with temperature.
+        init_range (tuple): Range for init and clipping (e.g., (-2, 2)).
 
     Returns:
         best_state (np.array): Best solution found.
@@ -43,13 +44,8 @@ def sa_continuous(
         - Works in arbitrary dimensions, provided the function f supports vector inputs.
         - Uses the Metropolis acceptance criterion with exponential cooling.
     """
-
-
-    if bounds is None:
-        bounds = [(-5, 5), (-5, 5)]
-
-    dim = len(bounds)
-    x = np.array(x_init if x_init is not None else [np.random.uniform(*b) for b in bounds], dtype=float)
+    dim = len(x_init) if x_init is not None else 2
+    x = np.array(x_init if x_init is not None else np.random.uniform(*init_range, size=dim), dtype=float)
     history = [x.copy()]
 
     try:
@@ -73,8 +69,7 @@ def sa_continuous(
         else:
             raise ValueError("Unknown perturbation_method: choose 'normal' or 'uniform'")
 
-        if bounds is not None:
-            x_new = np.clip(x_new, [b[0] for b in bounds], [b[1] for b in bounds])
+        x_new = np.clip(x_new, init_range[0], init_range[1])
 
         try:
             delta = f(x_new) - f(x)
@@ -109,14 +104,14 @@ def sa_continuous(
     return best_state, history, f_history
 
 
-def sa_discrete(f, state_init=None, lattice_size = (10,10), T_init=10, alpha=0.99, max_iter=10000, tol=1e-6):
+def sa_discrete(f, x_init=None, lattice_size = (10,10), T_init=10, alpha=0.99, max_iter=10000, tol=1e-6):
 
     """
     Simulated Annealing for discrete spin systems (e.g., 2D Ising model).
 
     Parameters:
         f (callable): Energy function. Must accept a 2D NumPy array of ±1 spins.
-        state_init (np.array or None): Initial lattice. If None, initialized randomly with ±1.
+        x_init (np.array or None): Initial lattice. If None, initialized randomly with ±1.
         lattice_size (tuple): Dimensions of the spin lattice (rows, cols).
         T_init (float): Initial temperature.
         alpha (float): Cooling rate (0 < alpha < 1).
@@ -134,11 +129,7 @@ def sa_discrete(f, state_init=None, lattice_size = (10,10), T_init=10, alpha=0.9
         - Convergence based on repeated state detection.
     """
     
-    # random initialization of state_init is None
-    if state_init is None : 
-        state_init = np.random.choice([-1,1], size = lattice_size)
-    
-    state = state_init.copy()
+    state = x_init.copy()
     best_state = state.copy()
     best_f = f(state)
     history = [state.copy()]
