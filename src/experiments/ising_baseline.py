@@ -23,7 +23,7 @@ os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
 # === Shared settings ===
-num_runs = 5
+num_runs = 50
 tol = 1e-6
 lattice_shape = (10, 10)
 experiment_id = get_experiment_id()
@@ -106,6 +106,7 @@ def run_experiments():
         x_inits=x_inits_cont,
         f_star=-200.0,
         x_star=None,
+        init_range = (-1,1),
         **sa_cont_params
     )
 

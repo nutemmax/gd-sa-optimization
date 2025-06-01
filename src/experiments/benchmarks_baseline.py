@@ -27,7 +27,7 @@ init_point = None
 tol = 1e-6
 perturbation_method = "normal"
 adaptive_step_size = False
-num_runs = 5
+num_runs = 50
 dim = 2
 experiment_id = get_experiment_id()
 

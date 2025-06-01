@@ -109,6 +109,7 @@ def run_experiments():
         max_iter=20000,
         tol=tol,
         perturbation_method="normal",
+        init_range = (-1,1),
         adaptive_step_size=False
     )
 

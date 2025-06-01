@@ -72,40 +72,36 @@ def evaluate_continuous_results(final_values, runtimes=None, final_states=None, 
     }
 
 
-def evaluate_discrete_results(final_states, best_state, threshold=0, runtimes=None):
-    """
-    Evaluates results from discrete optimization runs using Hamming distance to best_state.
+def evaluate_discrete_results(final_values, final_states, best_state, threshold=0, runtimes=None, f_star=-200.0):
 
-    Computes:
-    - mean_hamming_distance
-    - count of states within Hamming distance threshold
-    - mean_runtime_sec (if runtimes provided)
+    final_values = np.array(final_values)
 
-    Args:
-        final_states (list of np.array): list of binary spin configurations
-        best_state (np.array): known best configuration (ground truth)
-        threshold (int): Hamming distance threshold for "near-optimal"
-        runtimes (list of float): list of runtimes (optional)
+    # basic statistics
+    mean_value = np.mean(final_values)
+    best_value = np.min(final_values)
+    worst_value = np.max(final_values)
+    std_value = np.std(final_values)
 
-    Returns:
-        dict with keys:
-            - mean_hamming_dist
-            - near_optimal_count
-            - mean_runtime_sec (if runtimes provided)
-    """
-    if best_state is None or not final_states:
-        return {}
+    # error metrics
+    mse = np.mean((final_values - f_star) ** 2)
+    rmse = np.sqrt(mse)
 
+    # hamming distances
     distances = [np.sum(state != best_state) for state in final_states]
     mean_hamming = np.mean(distances)
-    near_optimal_count = sum(d <= threshold for d in distances)
 
-    mean_runtime = np.mean(runtimes) if runtimes else None
+    # Runtime
+    mean_runtime = np.mean(runtimes) if runtimes is not None else None
 
     return {
-        'mean_hamming_dist': mean_hamming,
-        'near_optimal_count': near_optimal_count,
-        'mean_runtime_sec': mean_runtime
+        "mean": mean_value,
+        "best": best_value,
+        "worst": worst_value,
+        "std": std_value,
+        "mse": mse,
+        "rmse": rmse,
+        "mean_hamming_dist": mean_hamming,
+        "mean_runtime": mean_runtime
     }
 
 
@@ -245,13 +241,14 @@ def bootstrap_experiment_ising(
 
     if is_discrete:
         stats = evaluate_discrete_results(
+            final_values=final_values,
             final_states=final_states,
             best_state=best_state,
             threshold=hamming_threshold,
-            runtimes=runtimes
+            runtimes=runtimes,
+            f_star=f_star
         )
         epsilon = None
-        near_optimal_count = None
     else:
         stats = evaluate_continuous_results(
             final_values=final_values,
@@ -261,14 +258,13 @@ def bootstrap_experiment_ising(
             f_star=f_star
         )
         epsilon = stats['epsilon']
-        near_optimal_count = stats['near_optimal_count']
+
 
     return {
         'final_values': final_values,
         'final_states': final_states,
         'stats': stats,
         'epsilon': epsilon,
-        'near_optimal_count': near_optimal_count,
         'histories': state_histories,
         'f_histories': energy_histories,
         'runtimes': runtimes

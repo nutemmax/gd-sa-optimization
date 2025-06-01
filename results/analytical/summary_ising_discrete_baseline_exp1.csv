@@ -1,0 +1,2 @@
+Algorithm,rmse,best,worst,std,epsilon,near_optimal_count,mean,mse,mae,mean_runtime_sec,mean_dist_to_x_star
+SA,101.6314911826054,-144.0,-36.0,20.60896892132161,1e-11,1,-99.52,10328.96,99.52,,
