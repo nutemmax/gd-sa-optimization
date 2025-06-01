@@ -160,7 +160,7 @@ def bootstrap_experiment(
     runtimes = []
 
     # fetch init_range from kwargs only once
-    init_range = kwargs.pop("init_range", (-5, 5))
+    init_range = kwargs.get("init_range", (-5,5))
 
     for i in range(1, runs + 1):
         print(f'Run {i}/{runs}...', flush=True)

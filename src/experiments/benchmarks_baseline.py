@@ -28,7 +28,7 @@ bounds = [(-5, 5), (-5, 5)]
 tol = 1e-6
 perturbation_method = "normal"
 adaptive_step_size = False
-num_runs = 50
+num_runs = 5
 experiment_id = get_experiment_id()
 
 sa_params = {
@@ -68,11 +68,10 @@ def run_experiments():
         print(f"\nRunning experiments on {name}")
 
         # select init range based on the benchmark
-        if name == "rosenbrock":
+        if name.lower() == "rosenbrock":
             init_range = (-2, 2)
         else:
             init_range = (-5, 5)
-
 
         gd_results = bootstrap_experiment(
             gradient_descent,
@@ -80,7 +79,7 @@ def run_experiments():
             f,
             grad,
             **gd_params,
-            init_range=init_range,  # passed to gradient_descent
+            init_range=init_range,  # passed to GD
             tol=tol,
             x_init=init_point,
             f_star=0.0,

@@ -46,6 +46,7 @@ def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None, 
     # initialize x
     x = np.array(x_init, dtype=float)
     clip_range = init_range  # use same range for clipping
+    print(f"Clip range : {clip_range}")
     history = [x.copy()]
     f_history = []
 
