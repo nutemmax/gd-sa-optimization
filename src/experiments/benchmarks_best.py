@@ -39,19 +39,22 @@ num_runs = 50
 experiment_id = get_experiment_id()
 
 
-def plot_best_convergence(name, sa_histories, gd_histories):
-    sa_best_idx = np.argmin([hist[-1] for hist in sa_histories])
-    gd_best_idx = np.argmin([hist[-1] for hist in gd_histories])
+def plot_best_convergence(name, sa_histories, gd_histories, f):
+    sa_final_vals = [f(hist[-1]) for hist in sa_histories]
+    gd_final_vals = [f(hist[-1]) for hist in gd_histories]
+
+    sa_best_idx = np.argmin(sa_final_vals)
+    gd_best_idx = np.argmin(gd_final_vals)
 
     plt.figure(figsize=(10, 6))
-    plt.plot(sa_histories[sa_best_idx], label='SA (Best Run)')
-    plt.plot(gd_histories[gd_best_idx], label='GD (Best Run)')
-    plt.xlabel('Iteration')
-    plt.ylabel('Function Value')
-    plt.title(f'Best-run Convergence - {name} (Best Params)')
+    plt.plot([f(x) for x in sa_histories[sa_best_idx]], label="SA (Best Run)")
+    plt.plot([f(x) for x in gd_histories[gd_best_idx]], label="GD (Best Run)")
+    plt.xlabel("Iteration")
+    plt.ylabel("Function Value")
+    plt.title(f"Best-run Convergence on {name} (Best Params)")
     plt.legend()
     plt.grid(True)
-    plt.savefig(os.path.join(plots_dir, f'{name}_best_hyperparameters_convergence_exp{experiment_id}.png'))
+    plt.savefig(os.path.join(plots_dir, f"{name}_best_parameters_convergence_exp{experiment_id}.png"))
     plt.close()
 
 
@@ -64,15 +67,15 @@ def run_experiments():
 
         sa_results = bootstrap_experiment(sa_continuous, num_runs, f, x_init=init_point, bounds=bounds, 
                                           T0=sa_p['T0'], alpha=sa_p['alpha'], step_size=sa_p['step_size'],
-                                          tol=tol, max_iter=20000)
+                                          tol=tol, max_iter=20000, f_star=0.0, x_star=np.zeros(2))
 
         gd_results = bootstrap_experiment(gradient_descent, num_runs, f, grad, 
-                                          lr=gd_p['lr'], tol=tol, max_iter=20000, x_init=init_point)
+                                          lr=gd_p['lr'], tol=tol, max_iter=20000, x_init=init_point, f_star=0.0, x_star=np.zeros(2))
 
         generate_summary_csv(f'{name}_best_hyperparameters', gd_stats=gd_results['stats'], 
                              sa_stats=sa_results['stats'], experiment_id=experiment_id, save_dir=analytical_dir)
 
-        plot_best_convergence(name, sa_results['histories'], gd_results['histories'])
+        plot_best_convergence(name, sa_results['histories'], gd_results['histories'], f)
 
 
 if __name__ == '__main__':

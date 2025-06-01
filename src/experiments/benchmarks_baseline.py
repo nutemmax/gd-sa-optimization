@@ -43,13 +43,17 @@ gd_params = {
     "max_iter": 20000
 }
 
-def plot_best_convergence(name, sa_histories, gd_histories):
-    sa_best_idx = np.argmin([hist[-1] for hist in sa_histories])
-    gd_best_idx = np.argmin([hist[-1] for hist in gd_histories])
+
+def plot_best_convergence(name, sa_histories, gd_histories, f):
+    sa_final_vals = [f(hist[-1]) for hist in sa_histories]
+    gd_final_vals = [f(hist[-1]) for hist in gd_histories]
+
+    sa_best_idx = np.argmin(sa_final_vals)
+    gd_best_idx = np.argmin(gd_final_vals)
 
     plt.figure(figsize=(10, 6))
-    plt.plot(sa_histories[sa_best_idx], label="SA (Best Run)")
-    plt.plot(gd_histories[gd_best_idx], label="GD (Best Run)")
+    plt.plot([f(x) for x in sa_histories[sa_best_idx]], label="SA (Best Run)")
+    plt.plot([f(x) for x in gd_histories[gd_best_idx]], label="GD (Best Run)")
     plt.xlabel("Iteration")
     plt.ylabel("Function Value")
     plt.title(f"Best-run Convergence on {name} (Baseline Params)")
@@ -58,15 +62,50 @@ def plot_best_convergence(name, sa_histories, gd_histories):
     plt.savefig(os.path.join(plots_dir, f"{name}_baseline_parameters_convergence_exp{experiment_id}.png"))
     plt.close()
 
+
 def run_experiments():
     for name, (f, grad) in benchmarks.items():
         print(f"\nRunning experiments on {name}")
 
-        gd_results = bootstrap_experiment(gradient_descent, num_runs, f, grad, **gd_params, tol=tol, x_init=init_point)
-        sa_results = bootstrap_experiment(sa_continuous, num_runs, f, **sa_params, tol=tol, x_init=init_point, bounds=bounds, perturbation_method=perturbation_method, adaptive_step_size=adaptive_step_size)
+        # select init range based on the benchmark
+        if name == "rosenbrock":
+            init_range = (-2, 2)
+        else:
+            init_range = (-5, 5)
+
+
+        gd_results = bootstrap_experiment(
+            gradient_descent,
+            num_runs,
+            f,
+            grad,
+            **gd_params,
+            init_range=init_range,  # passed to gradient_descent
+            tol=tol,
+            x_init=init_point,
+            f_star=0.0,
+            x_star=np.zeros(2),
+            dim=2
+        )
+
+        sa_results = bootstrap_experiment(
+            sa_continuous,
+            num_runs,
+            f,
+            **sa_params,
+            tol=tol,
+            x_init=init_point,
+            bounds=bounds,
+            perturbation_method=perturbation_method,
+            adaptive_step_size=adaptive_step_size,
+            f_star=0.0,
+            x_star=np.zeros(2),
+            dim=2
+        )
 
         generate_summary_csv(f"{name}_baseline_parameters", gd_results['stats'], sa_results['stats'], experiment_id, analytical_dir)
-        plot_best_convergence(name, sa_results['histories'], gd_results['histories'])
+        plot_best_convergence(name, sa_results['histories'], gd_results['histories'], f)
+
 
 if __name__ == "__main__":
     run_experiments()

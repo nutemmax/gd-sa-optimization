@@ -1,6 +1,7 @@
 import numpy as np
+import inspect
 
-def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None):
+def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None, init_range=(-5, 5)):
     """
     Gradient descent with optional fallback to scalar-input functions and domain-specific clipping.
 
@@ -18,54 +19,70 @@ def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None):
         f_history (list of float): Function values per iteration.
     """
     # dimension and function-specific clip/init ranges
+    # if x_init is not None:
+    #     dim = len(x_init)
+    # else:
+    #     dim = 2
+
+    # if dim == 2 and f.__name__.lower() == 'rosenbrock':
+    #     init_range = (-2, 2)
+    #     clip_range = (-2, 2)
+    # else:
+    #     init_range = (-5, 5)
+    #     clip_range = (-5, 5)
+
+    # initialize x
+    # x = np.array(x_init if x_init is not None else np.random.uniform(*init_range, size=dim), dtype=float)
+    # history = [x.copy()]
+    # f_history = []
+
+    # determine dim
     if x_init is not None:
         dim = len(x_init)
     else:
         dim = 2
-
-    if dim == 2 and f.__name__.lower() == 'rosenbrock':
-        init_range = (-2, 2)
-        clip_range = (-2, 2)
-    else:
-        init_range = (-5, 5)
-        clip_range = (-5, 5)
+        x_init = np.random.uniform(*init_range, size=dim)
 
     # initialize x
-    x = np.array(x_init if x_init is not None else np.random.uniform(*init_range, size=dim), dtype=float)
+    x = np.array(x_init, dtype=float)
+    clip_range = init_range  # use same range for clipping
     history = [x.copy()]
+    f_history = []
 
-    # first function value
-    try:
-        f_val = f(x)
-    except TypeError:
-        f_val = f(x[0], x[1])
-    f_history = [f_val]
+    # determine input style
+    f_params = inspect.signature(f).parameters
+    is_vector_input = len(f_params) == 1
+
+    grad_params = inspect.signature(grad_f).parameters
+    is_grad_vector_input = len(grad_params) == 1
+
+    # unpack
+    def call_f(x):
+        # return f(x) if is_vector_input else f(*x)
+        return f(np.asarray(x).flatten())
+
+    def call_grad(x):
+        # return grad_f(x) if is_grad_vector_input else np.array(grad_f(*x))
+        return grad_f(np.asarray(x).flatten())
+    
+    f_val = call_f(x)
+    f_history.append(f_val)
 
     for _ in range(max_iter):
-        try:
-            grad = grad_f(x)
-        except TypeError:
-            grad = grad_f(x[0], x[1])
-
+        grad = call_grad(x)
         x_new = x - lr * grad
         x_new = np.clip(x_new, clip_range[0], clip_range[1])
 
         if np.linalg.norm(x_new - x) < tol or np.linalg.norm(grad) < tol:
             x = x_new
             history.append(x.copy())
-            try:
-                f_val = f(x)
-            except TypeError:
-                f_val = f(x[0], x[1])
+            f_val = call_f(x)
             f_history.append(f_val)
             break
 
         x = x_new
         history.append(x.copy())
-        try:
-            f_val = f(x)
-        except TypeError:
-            f_val = f(x[0], x[1])
+        f_val = call_f(x)
         f_history.append(f_val)
 
     return x, history, f_history

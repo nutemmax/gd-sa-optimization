@@ -39,14 +39,15 @@ def gd_nn(
     monitoring of weight norms and validation accuracy—following the same interface as `sa_nn`.
 
     Args:
-        x_init (np.ndarray): Initial flat vector of weights (used to initialize the model).
-        layer_sizes (List[int]): Architecture of the neural network, e.g., [d, h1, h2, ..., c].
+        model (nn.Module): The PyTorch model to train. Must support forward() and contain initialized weights.
+        X_train (np.ndarray): Training input features.
+        y_train (np.ndarray): Training labels (either one-hot or class indices).
         X_train (np.ndarray): Training input features.
         y_train (np.ndarray): Training labels (either one-hot or class indices).
         optimizer_name (str): Which optimizer to use: "gd", "sgd", or "adam".
         lr (float): Learning rate for the optimizer.
         batch_size (int): Mini-batch size. If None, uses full-batch training.
-        max_epochs (int): Maximum number of training epochs.
+        epochs (int): max number of training epochs.
         tol (float): Minimum weight change norm to detect convergence (not used with early stopping).
         verbose (bool): If True, prints progress logs during training.
         loss_type (str): Loss function to use, "cross_entropy" or "mse".
@@ -72,7 +73,6 @@ def gd_nn(
         - All histories are aligned in length (one entry per epoch).
         - The returned `best_x` is determined based on validation loss if validation is provided,
           otherwise it's the final epoch’s weights.
-        - `x_init` is only used for initialization and ignored if `model` is explicitly passed.
     """
 
     model.to(device)
