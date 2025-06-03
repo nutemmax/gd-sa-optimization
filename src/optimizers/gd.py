@@ -1,7 +1,7 @@
 import numpy as np
 import inspect
 
-def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None, init_range=(-5, 5)):
+def gradient_descent(f, grad_f, lr=0.001, max_iter=1000, tol=1e-6, x_init=None, init_range=(-5, 5), name = None):
     """
     Gradient descent with optional fallback to scalar-input functions and domain-specific clipping.
 

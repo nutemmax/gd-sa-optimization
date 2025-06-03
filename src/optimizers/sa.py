@@ -15,7 +15,8 @@ def sa_continuous(
     step_size=0.5,
     perturbation_method='normal',
     adaptive_step_size=False,
-    init_range=(-5, 5)
+    init_range=(-5, 5),
+    name=None
 ):
     """
     Simulated Annealing for continuous optimization problems.
@@ -104,7 +105,7 @@ def sa_continuous(
     return best_state, history, f_history
 
 
-def sa_discrete(f, x_init=None, lattice_size = (10,10), T_init=10, alpha=0.99, max_iter=10000, tol=1e-6):
+def sa_discrete(f, x_init=None, lattice_size = (10,10), T_init=10, alpha=0.99, max_iter=10000, tol=1e-6, name=None):
 
     """
     Simulated Annealing for discrete spin systems (e.g., 2D Ising model).

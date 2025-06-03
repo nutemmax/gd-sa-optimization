@@ -58,8 +58,6 @@ def plot_combined_convergence(name, sa_histories, gd_histories, relaxed_f):
 def run_experiments():
     # === Discrete Ising ===
     print("Running SA on discrete Ising")
-
-    # shared init
     x_inits_disc = [np.random.choice([-1, 1], size=lattice_shape) for _ in range(num_runs)]
 
     sa_disc = bootstrap_experiment_ising(
@@ -122,7 +120,6 @@ def run_experiments():
     generate_summary_csv("ising_relaxed_baseline", gd_results["stats"], sa_results["stats"], experiment_id, analytical_dir)
     plot_combined_convergence("ising_relaxed", sa_results["histories"], gd_results["histories"], relaxed_f)
 
-    # Final energy table
     final_energy_data = []
     for i, val in enumerate(sa_results["final_values"]):
         final_energy_data.append({
@@ -140,7 +137,6 @@ def run_experiments():
         index=False
     )
 
-    # Plot histogram
     plt.figure(figsize=(10, 6))
     plt.hist(sa_results["final_values"], bins=20, alpha=0.6, label="SA")
     plt.hist(gd_results["final_values"], bins=20, alpha=0.6, label="GD")
@@ -152,7 +148,6 @@ def run_experiments():
     plt.tight_layout()
     plt.savefig(os.path.join(plots_dir, f"hist_final_energies_ising_relaxed_baseline_exp{experiment_id}.png"))
     plt.close()
-
 
 if __name__ == "__main__":
     run_experiments()

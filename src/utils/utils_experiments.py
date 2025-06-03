@@ -67,7 +67,7 @@ def evaluate_continuous_results(final_values, runtimes=None, final_states=None, 
 
     # mean euclidean distance to x*
     if final_states is not None and x_star is not None:
-        distances = [np.linalg.norm(x - x_star) for x in final_states]
+        distances = [np.linalg.norm(x - x_star)**2 for x in final_states]
         med = np.mean(distances)
         rmed = np.sqrt(np.mean([d**2 for d in distances]))
     else:
@@ -198,9 +198,9 @@ def bootstrap_experiment_benchmarks(
         if algorithm_function.__name__ == "sa_gd_hybrid":
             result = algorithm_function(f=f, grad_f=grad_f, x_init=x_init, name=name, **kwargs)
         elif grad_f is not None:
-            result = algorithm_function(f, grad_f, x_init=x_init, init_range=init_range, **kwargs)
+            result = algorithm_function(f, grad_f, x_init=x_init, init_range=init_range, name = name, **kwargs)
         else:
-            result = algorithm_function(f, x_init=x_init, init_range=init_range, **kwargs)
+            result = algorithm_function(f, x_init=x_init, init_range=init_range, name = name, **kwargs)
 
 
         x_final, x_hist, f_hist = result
