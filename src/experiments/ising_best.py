@@ -13,7 +13,7 @@ from src.optimizers.sa import sa_continuous, sa_discrete
 from src.optimizers.gd import gradient_descent
 from src.problems.ising import ising_energy, relaxed_ising_energy, grad_relaxed_ising
 from src.utils.utils_plots import plot_spin_evolution, plot_energy_trajectory, plot_final_spin_config
-from src.utils.utils_experiments import bootstrap_experiment_ising, get_experiment_id, evaluate_continuous_results, evaluate_discrete_results, generate_summary_csv
+from src.utils.utils_experiments import bootstrap_experiment_ising, get_experiment_id, evaluate_ising_results, generate_summary_csv
 
 # === Paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -67,17 +67,24 @@ def run_experiments():
         f=ising_energy,
         dim=dim_ising,
         x_inits=x_inits_disc,
-        lattice_size=lattice_shape,
         is_discrete=True,
         best_state=None,
         hamming_threshold=0,
-        T_init=sa_disc_p["T0"],
+        f_star=-200.0,
+        T_init=sa_disc_p["T_init"],
         alpha=sa_disc_p["alpha"],
         max_iter=20000,
         tol=tol
     )
 
-    sa_disc["stats"] = evaluate_continuous_results(sa_disc["final_values"])
+    sa_disc["stats"] = evaluate_ising_results(
+        final_values=sa_disc["final_values"],
+        final_states=sa_disc["final_states"],
+        best_state=None,
+        threshold=0,
+        runtimes=sa_disc.get("runtimes"),
+        f_star=-200.0
+    )
     best_sa_run = min(sa_disc['histories'], key=lambda h: ising_energy(h[-1]))
     plot_final_spin_config(best_sa_run[-1].reshape(lattice_shape), f"ising_discrete_best_exp{experiment_id}", plots_dir)
     plot_energy_trajectory(

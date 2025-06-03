@@ -13,32 +13,32 @@ ising_variants = ['ising_relaxed', 'ising_discrete']
 # Maps our canonical names to actual filenames
 FILENAME_MAP = {
     'rosenbrock': {
-        'sa': 'gridsearch_sa_rosenbrock.csv',
-        'gd': 'gridsearch_gd_rosenbrock.csv'
+        'sa': 'gridsearch_sa_rosenbrock_new.csv',
+        'gd': 'gridsearch_gd_rosenbrock_new.csv'
     },
     'rastrigin': {
-        'sa': 'gridsearch_sa_rastrigin.csv',
-        'gd': 'gridsearch_gd_rastrigin.csv'
+        'sa': 'gridsearch_sa_rastrigin_new.csv',
+        'gd': 'gridsearch_gd_rastrigin_new.csv'
     },
     'ackley': {
-        'sa': 'gridsearch_sa_ackley.csv',
-        'gd': 'gridsearch_gd_ackley.csv'
+        'sa': 'gridsearch_sa_ackley_new.csv',
+        'gd': 'gridsearch_gd_ackley_new.csv'
     },
     'ising_relaxed': {
-        'sa': 'gridsearch_sa_continuous_ising.csv',
-        'gd': 'gridsearch_gd_ising.csv'
+        'sa': 'gridsearch_sa_continuous_ising_new.csv',
+        'gd': 'gridsearch_gd_ising_new.csv'
     },
     'ising_discrete': {
-        'sa': 'gridsearch_sa_discrete_ising.csv'
+        'sa': 'gridsearch_sa_discrete_ising_new.csv'
     }
 }
 
 def load_best_config(path):
-    """Loads CSV and returns best row by lowest mean value."""
+    """Loads CSV and returns best row by lowest rmse value."""
     df = pd.read_csv(path)
     if 'mean' not in df.columns:
-        raise ValueError(f"No 'mean' column found in {path}")
-    best_row = df.loc[df['mean'].idxmin()]
+        raise ValueError(f"No 'rmse' column found in {path}")
+    best_row = df.loc[df['rmse'].idxmin()]
     return best_row.to_dict()
 
 # === Select best hyperparams ===

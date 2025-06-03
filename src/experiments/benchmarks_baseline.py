@@ -70,8 +70,12 @@ def run_experiments():
         # select init range based on the benchmark
         if name.lower() == "rosenbrock":
             init_range = (-2, 2)
+            x_star = np.array([1.0, 1.0])
         else:
             init_range = (-5, 5)
+            x_star = np.zeros(2)
+
+        print(f"Function : {name}, x_star : {x_star}")
 
         # pre-generate the same initializations for all runs
         inits = [np.random.uniform(*init_range, size=dim) for _ in range(num_runs)]
@@ -86,7 +90,7 @@ def run_experiments():
             x_inits = inits,
             name=name,
             f_star=0.0,
-            x_star=np.zeros(2),
+            x_star=x_star,
             **gd_params
         )
 

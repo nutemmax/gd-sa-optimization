@@ -17,13 +17,28 @@ from src.problems.ising import ising_energy, relaxed_ising_energy, grad_relaxed_
 def evaluate_continuous_results(final_values, runtimes=None, final_states=None, x_star=None, f_star=0.0):
     """
     Evaluates results from continuous optimization runs.
-    Computes:
-    - mean, best, worst, std
-    - epsilon based on best value
-    - near-optimal count
-    - MAE, MSE, RMSE (against f_star)
-    - mean_runtime (if runtimes provided)
-    - mean_distance_to_x_star (if final_states and x_star provided)
+
+    Parameters:
+    - final_values (list or array): Final function values from each run.
+    - runtimes (list, optional): Runtime durations for each run, used to compute average runtime.
+    - final_states (list or array, optional): Final states (solution vectors) from each run.
+    - x_star (array-like, optional): Known global minimizer, used to compute distance metrics.
+    - f_star (float, default=0.0): Known global minimum value, used for error metrics.
+
+    Returns:
+    dict with:
+    - 'mean': Mean final function value
+    - 'best': Best (lowest) function value
+    - 'worst': Worst (highest) function value
+    - 'std': Standard deviation of function values
+    - 'epsilon': Precision threshold around best value (adaptive)
+    - 'near_optimal_count': Number of runs within epsilon of best value
+    - 'mae': Mean Absolute Error relative to f_star
+    - 'mse': Mean Squared Error relative to f_star
+    - 'rmse': Root Mean Squared Error relative to f_star
+    - 'mean_runtime_sec': Average runtime per run (if runtimes provided)
+    - 'med': Mean Euclidean Distance to x_star (if final_states and x_star provided)
+    - 'rmed': Root Mean Euclidean Distance to x_star (if final_states and x_star provided)
     """
     if not final_values:
         return {}
@@ -50,15 +65,18 @@ def evaluate_continuous_results(final_values, runtimes=None, final_states=None, 
     # Runtime
     mean_runtime = np.mean(runtimes) if runtimes else None
 
-    # Mean distance to x*
+    # mean euclidean distance to x*
     if final_states is not None and x_star is not None:
         distances = [np.linalg.norm(x - x_star) for x in final_states]
-        mean_dist_x_star = np.mean(distances)
+        med = np.mean(distances)
+        rmed = np.sqrt(np.mean([d**2 for d in distances]))
     else:
-        mean_dist_x_star = None
+        med = None
+        rmed = None
 
     return {
         'rmse': rmse,
+        'rmed' : rmed,
         'best': best_value,
         'worst': np.max(final_values),
         'std': np.std(final_values),
@@ -66,43 +84,119 @@ def evaluate_continuous_results(final_values, runtimes=None, final_states=None, 
         'near_optimal_count': int(near_optimal_count),
         'mean': np.mean(final_values),
         'mse': mse,
+        'med' : med,
         'mae': mae,
         'mean_runtime_sec': mean_runtime,
-        'mean_dist_to_x_star': mean_dist_x_star
     }
 
 
-def evaluate_discrete_results(final_values, final_states, best_state, threshold=0, runtimes=None, f_star=-200.0):
+def evaluate_ising_results(final_values, final_states, best_state=None, threshold=0, runtimes=None, f_star=-200.0):
+    """
+    Evaluates Ising model optimization results (discrete or relaxed).
 
+    Computes:
+    - mean, best, worst, std
+    - MSE, RMSE relative to f_star
+    - mean runtime (if runtimes provided)
+    - mean Hamming distance (if best_state provided)
+    - MED and RMED = mean and root mean squared distance to closest of (+1,...,+1) or (-1,...,-1)
+    """
     final_values = np.array(final_values)
 
-    # basic statistics
+    # Basic stats
     mean_value = np.mean(final_values)
     best_value = np.min(final_values)
     worst_value = np.max(final_values)
     std_value = np.std(final_values)
 
-    # error metrics
+    # Errors vs known energy minimum
     mse = np.mean((final_values - f_star) ** 2)
     rmse = np.sqrt(mse)
-
-    # hamming distances
-    distances = [np.sum(state != best_state) for state in final_states]
-    mean_hamming = np.mean(distances)
-
-    # Runtime
     mean_runtime = np.mean(runtimes) if runtimes is not None else None
 
+    # Mean Hamming distance (only for discrete Ising)
+    if best_state is not None:
+        hamming_distances = [np.sum(state != best_state) for state in final_states]
+        mean_hamming = np.mean(hamming_distances)
+    else:
+        mean_hamming = None
+
+    # Distance to closest global optimum: (+1,...,+1) or (-1,...,-1)
+    ref_plus = np.ones_like(final_states[0])
+    ref_minus = -np.ones_like(final_states[0])
+    dists = [min(np.linalg.norm(state - ref_plus), np.linalg.norm(state - ref_minus)) for state in final_states]
+    med = np.mean(dists)
+    rmed = np.sqrt(np.mean(np.square(dists)))
+
     return {
-        "mean": mean_value,
+        "rmse": rmse,
+        "rmed": rmed,
         "best": best_value,
         "worst": worst_value,
         "std": std_value,
+        "mean": mean_value,
         "mse": mse,
-        "rmse": rmse,
+        "mean_runtime": mean_runtime,
         "mean_hamming_dist": mean_hamming,
-        "mean_runtime": mean_runtime
+        "med": med,
+        
     }
+
+
+
+def evaluate_ising_results_old(final_values, final_states, best_state=None, threshold=0, runtimes=None, f_star=-200.0):
+    """
+    Evaluates Ising model optimization results (both discrete and relaxed).
+    Computes:
+    - basic stats: mean, best, worst, std
+    - error metrics: MSE, RMSE (vs f_star)
+    - mean runtime (if provided)
+    - mean Hamming distance (if best_state provided, i.e. discrete case)
+    - MED and RMED to nearest of (+1,...,+1) and (-1,...,-1) (for all cases)
+    """
+    final_values = np.array(final_values)
+    
+    # Basic stats
+    mean_value = np.mean(final_values)
+    best_value = np.min(final_values)
+    worst_value = np.max(final_values)
+    std_value = np.std(final_values)
+
+    # Errors vs known energy minimum
+    mse = np.mean((final_values - f_star) ** 2)
+    rmse = np.sqrt(mse)
+    mean_runtime = np.mean(runtimes) if runtimes is not None else None
+
+    # Mean Hamming distance (only in discrete case)
+    if best_state is not None:
+        hamming_distances = [np.sum(state != best_state) for state in final_states]
+        mean_hamming = np.mean(hamming_distances)
+    else:
+        mean_hamming = None
+
+    # Euclidean distance to closest global optimum: (+1,...,+1) or (-1,...,-1)
+    all_ones = np.ones_like(final_states[0])
+    all_minus_ones = -np.ones_like(final_states[0])
+    euclidean_distances = [
+        min(np.linalg.norm(state - all_ones), np.linalg.norm(state - all_minus_ones))
+        for state in final_states
+    ]
+    med = np.mean(euclidean_distances)
+    rmed = np.sqrt(np.mean([d**2 for d in euclidean_distances]))
+
+    return {
+        "rmse": rmse,
+        "rmed": rmed,
+        "best": best_value,
+        "worst": worst_value,
+        "std": std_value,
+        "mean": mean_value,
+        "mse": mse,
+        "mean_runtime": mean_runtime,
+        "mean_hamming_dist": mean_hamming,
+        "med": med,
+    }
+
 
 
 def compute_frequency_continuous(final_states, best_state, f):
@@ -191,19 +285,25 @@ def bootstrap_experiment_benchmarks(
     }
 
 
+
+import time
+import numpy as np
+from src.utils.utils_experiments import evaluate_ising_results
+from src.problems.ising import grad_relaxed_ising
+
 def bootstrap_experiment_ising(
     algorithm_function,
     runs,
     f,
-    grad_f = grad_relaxed_ising,
-    dim = 10,
-    x_inits = None, 
+    grad_f=grad_relaxed_ising,
+    dim=10,
+    x_inits=None,
     is_discrete=False,
     best_state=None,
     hamming_threshold=0,
     f_star=0.0,
     x_star=None,
-    name = "ising",
+    name="ising",
     **kwargs
 ):
     final_values = []
@@ -216,22 +316,25 @@ def bootstrap_experiment_ising(
         print(f"[Ising {'Discrete' if is_discrete else 'Relaxed'}] Run {i}/{runs}", flush=True)
         start_time = time.time()
 
-        # initialization
+        # Select initialization
         x_init = x_inits[i - 1] if x_inits is not None else (
             np.random.choice([-1, 1], size=(dim, dim)) if is_discrete else np.random.uniform(-1, 1, size=(dim, dim))
         )
-        kwargs.pop("x_init", None)  # Remove just in case
+        kwargs.pop("x_init", None)  # prevent accidental override
+        kwargs_clean = kwargs.copy()
 
+        # Execute algorithm
         if is_discrete:
-            result = algorithm_function(f, x_init=x_init, **kwargs)
+            result = algorithm_function(f, x_init=x_init, **kwargs_clean)
         else:
             if algorithm_function.__name__ == "gradient_descent":
-                result = algorithm_function(f, grad_f, x_init=x_init, **kwargs)
-            else:  # for sa_continuous or anything that does NOT take grad_f
-                result = algorithm_function(f, x_init=x_init, **kwargs)
+                result = algorithm_function(f, grad_f, x_init=x_init, **kwargs_clean)
+            else:
+                result = algorithm_function(f, x_init=x_init, **kwargs_clean)
 
         x_final, x_hist, f_hist = result
 
+        # Record metrics
         duration = time.time() - start_time
         final_values.append(f_hist[-1])
         final_states.append(x_final)
@@ -239,36 +342,105 @@ def bootstrap_experiment_ising(
         energy_histories.append(f_hist)
         runtimes.append(duration)
 
-    if is_discrete:
-        stats = evaluate_discrete_results(
-            final_values=final_values,
-            final_states=final_states,
-            best_state=best_state,
-            threshold=hamming_threshold,
-            runtimes=runtimes,
-            f_star=f_star
-        )
-        epsilon = None
-    else:
-        stats = evaluate_continuous_results(
-            final_values=final_values,
-            runtimes=runtimes,
-            final_states=final_states,
-            x_star=x_star,
-            f_star=f_star
-        )
-        epsilon = stats['epsilon']
-
+    # Use a unified evaluation function for both cases
+    stats = evaluate_ising_results(
+        final_values=final_values,
+        final_states=final_states,
+        f_star=f_star,
+        best_state=best_state,
+        threshold=hamming_threshold,
+        runtimes=runtimes
+    )
 
     return {
-        'final_values': final_values,
-        'final_states': final_states,
-        'stats': stats,
-        'epsilon': epsilon,
-        'histories': state_histories,
-        'f_histories': energy_histories,
-        'runtimes': runtimes
+        "final_values": final_values,
+        "final_states": final_states,
+        "stats": stats,
+        "epsilon": None,  # not applicable for Ising experiments
+        "histories": state_histories,
+        "f_histories": energy_histories,
+        "runtimes": runtimes
     }
+
+
+# def bootstrap_experiment_ising(
+#     algorithm_function,
+#     runs,
+#     f,
+#     grad_f = grad_relaxed_ising,
+#     dim = 10,
+#     x_inits = None, 
+#     is_discrete=False,
+#     best_state=None,
+#     hamming_threshold=0,
+#     f_star=0.0,
+#     x_star=None,
+#     name = "ising",
+#     **kwargs
+# ):
+#     final_values = []
+#     final_states = []
+#     state_histories = []
+#     energy_histories = []
+#     runtimes = []
+
+#     for i in range(1, runs + 1):
+#         print(f"[Ising {'Discrete' if is_discrete else 'Relaxed'}] Run {i}/{runs}", flush=True)
+#         start_time = time.time()
+
+#         # initialization
+#         x_init = x_inits[i - 1] if x_inits is not None else (
+#             np.random.choice([-1, 1], size=(dim, dim)) if is_discrete else np.random.uniform(-1, 1, size=(dim, dim))
+#         )
+#         kwargs.pop("x_init", None)  # Remove just in case
+
+#         if is_discrete:
+#             result = algorithm_function(f, x_init=x_init, **kwargs)
+#         else:
+#             if algorithm_function.__name__ == "gradient_descent":
+#                 result = algorithm_function(f, grad_f, x_init=x_init, **kwargs)
+#             else:  # for sa_continuous or anything that does NOT take grad_f
+#                 result = algorithm_function(f, x_init=x_init, **kwargs)
+
+#         x_final, x_hist, f_hist = result
+
+#         duration = time.time() - start_time
+#         final_values.append(f_hist[-1])
+#         final_states.append(x_final)
+#         state_histories.append(x_hist)
+#         energy_histories.append(f_hist)
+#         runtimes.append(duration)
+
+#     if is_discrete:
+#         stats = evaluate_ising_results(
+#             final_values=final_values,
+#             final_states=final_states,
+#             best_state=best_state,
+#             threshold=hamming_threshold,
+#             runtimes=runtimes,
+#             f_star=f_star
+#         )
+#         epsilon = None
+#     else:
+#         stats = evaluate_continuous_results(
+#             final_values=final_values,
+#             runtimes=runtimes,
+#             final_states=final_states,
+#             x_star=x_star,
+#             f_star=f_star
+#         )
+#         epsilon = stats['epsilon']
+
+
+#     return {
+#         'final_values': final_values,
+#         'final_states': final_states,
+#         'stats': stats,
+#         'epsilon': epsilon,
+#         'histories': state_histories,
+#         'f_histories': energy_histories,
+#         'runtimes': runtimes
+#     }
 
 
 def bootstrap_experiment_old(

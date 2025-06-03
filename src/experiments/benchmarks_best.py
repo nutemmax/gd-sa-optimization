@@ -34,7 +34,7 @@ init_point = None
 tol = 1e-6
 perturbation_method = 'normal'
 adaptive_step_size = False
-num_runs = 5
+num_runs = 50
 experiment_id = get_experiment_id()
 dim = 2
 
@@ -65,8 +65,12 @@ def run_experiments():
         # select init range based on the benchmark
         if name.lower() == "rosenbrock":
             init_range = (-2, 2)
+            x_star = np.array([1.0, 1.0])
         else:
             init_range = (-5, 5)
+            x_star = np.zeros(2)
+        
+        print(f"Function : {name}, x_star : {x_star}")
 
         sa_p = best_params[name]['sa']
         gd_p = best_params[name]['gd']
