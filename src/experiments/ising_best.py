@@ -29,7 +29,7 @@ with open(os.path.join(gridsearch_dir, "best_hyperparams.json")) as f:
     best_params = json.load(f)
 
 # === Shared settings ===
-num_runs = 5
+num_runs = 50
 tol = 1e-6
 lattice_shape = (10, 10)
 experiment_id = get_experiment_id()

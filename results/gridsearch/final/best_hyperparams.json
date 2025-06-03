@@ -156,8 +156,8 @@
                 "std": 25.85369910667965,
                 "rmse": 52.64794707785515,
                 "mse": 2771.806331512637,
-                "mean_runtime": "NaN",
-                "mean_distance_to_x_star": "NaN"
+                "mean_runtime": NaN,
+                "mean_distance_to_x_star": NaN
             },
             "gd": {
                 "algorithm": "GD_continuous",
@@ -169,7 +169,7 @@
                 "rmse": 79.60045824173379,
                 "mse": 6336.232952294005,
                 "mean_runtime": 1.267560453414917,
-                "mean_distance_to_x_star": "NaN"
+                "mean_distance_to_x_star": NaN
             }
         },
         "ising_discrete": {
@@ -184,7 +184,7 @@
                 "rmse": 91.06305507723756,
                 "mse": 91.06305507723756,
                 "mean_runtime": 0.3923294734954834,
-                "hamming_best_to_gt": "NaN"
+                "hamming_best_to_gt": NaN
             }
         }
     }

@@ -143,62 +143,6 @@ def evaluate_ising_results(final_values, final_states, best_state=None, threshol
     }
 
 
-
-def evaluate_ising_results_old(final_values, final_states, best_state=None, threshold=0, runtimes=None, f_star=-200.0):
-    """
-    Evaluates Ising model optimization results (both discrete and relaxed).
-    Computes:
-    - basic stats: mean, best, worst, std
-    - error metrics: MSE, RMSE (vs f_star)
-    - mean runtime (if provided)
-    - mean Hamming distance (if best_state provided, i.e. discrete case)
-    - MED and RMED to nearest of (+1,...,+1) and (-1,...,-1) (for all cases)
-    """
-    final_values = np.array(final_values)
-    
-    # Basic stats
-    mean_value = np.mean(final_values)
-    best_value = np.min(final_values)
-    worst_value = np.max(final_values)
-    std_value = np.std(final_values)
-
-    # Errors vs known energy minimum
-    mse = np.mean((final_values - f_star) ** 2)
-    rmse = np.sqrt(mse)
-    mean_runtime = np.mean(runtimes) if runtimes is not None else None
-
-    # Mean Hamming distance (only in discrete case)
-    if best_state is not None:
-        hamming_distances = [np.sum(state != best_state) for state in final_states]
-        mean_hamming = np.mean(hamming_distances)
-    else:
-        mean_hamming = None
-
-    # Euclidean distance to closest global optimum: (+1,...,+1) or (-1,...,-1)
-    all_ones = np.ones_like(final_states[0])
-    all_minus_ones = -np.ones_like(final_states[0])
-    euclidean_distances = [
-        min(np.linalg.norm(state - all_ones), np.linalg.norm(state - all_minus_ones))
-        for state in final_states
-    ]
-    med = np.mean(euclidean_distances)
-    rmed = np.sqrt(np.mean([d**2 for d in euclidean_distances]))
-
-    return {
-        "rmse": rmse,
-        "rmed": rmed,
-        "best": best_value,
-        "worst": worst_value,
-        "std": std_value,
-        "mean": mean_value,
-        "mse": mse,
-        "mean_runtime": mean_runtime,
-        "mean_hamming_dist": mean_hamming,
-        "med": med,
-    }
-
-
-
 def compute_frequency_continuous(final_states, best_state, f):
     """
     Count how many states are within epsilon of the best objective value.
@@ -251,10 +195,13 @@ def bootstrap_experiment_benchmarks(
         x_init = x_inits[i - 1] if x_inits is not None else np.random.uniform(*init_range, size=dim)
 
         # call the algorithm, passing init_range for GD to enable clipping
-        if grad_f is not None:
+        if algorithm_function.__name__ == "sa_gd_hybrid":
+            result = algorithm_function(f=f, grad_f=grad_f, x_init=x_init, name=name, **kwargs)
+        elif grad_f is not None:
             result = algorithm_function(f, grad_f, x_init=x_init, init_range=init_range, **kwargs)
         else:
             result = algorithm_function(f, x_init=x_init, init_range=init_range, **kwargs)
+
 
         x_final, x_hist, f_hist = result
         duration = time.time() - start_time
@@ -284,12 +231,6 @@ def bootstrap_experiment_benchmarks(
         'runtimes': runtimes
     }
 
-
-
-import time
-import numpy as np
-from src.utils.utils_experiments import evaluate_ising_results
-from src.problems.ising import grad_relaxed_ising
 
 def bootstrap_experiment_ising(
     algorithm_function,
@@ -327,10 +268,11 @@ def bootstrap_experiment_ising(
         if is_discrete:
             result = algorithm_function(f, x_init=x_init, **kwargs_clean)
         else:
-            if algorithm_function.__name__ == "gradient_descent":
-                result = algorithm_function(f, grad_f, x_init=x_init, **kwargs_clean)
+            if algorithm_function.__name__ in ["gradient_descent", "sa_gd_hybrid"]:
+                result = algorithm_function(f=f, grad_f=grad_f, x_init=x_init, name=name, **kwargs_clean)
             else:
                 result = algorithm_function(f, x_init=x_init, **kwargs_clean)
+
 
         x_final, x_hist, f_hist = result
 
