@@ -45,12 +45,12 @@ def plot_energy_trajectory(energy_list, filename_prefix, save_dir):
     plt.close()
 
 
-def plot_final_spin_config(spin_config, filename_prefix, save_dir):
+def plot_final_spin_config(spin_config, setting, filename_prefix, save_dir):
     """Plots the final configuration of spin states (discrete or relaxed)."""
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(6, 6))
     sns.heatmap(spin_config, cmap='coolwarm', cbar=True, square=True)
-    plt.title("Final Configuration")
+    plt.title("Final Configuration : {}")
     plt.axis("off")
     plt.tight_layout()
     plt.savefig(os.path.join(save_dir, f"{filename_prefix}_final_spin_config.png"))

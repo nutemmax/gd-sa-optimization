@@ -51,6 +51,7 @@ def sa_gd_hybrid(
     history = [x.copy()]
     f_history = [f_curr]
 
+    stagnation_counter = 0
     for t in range(max_iter):
         g = grad_f(x)
         f_curr = f(x)
@@ -60,22 +61,27 @@ def sa_gd_hybrid(
         a = np.random.rand()
 
         if a < P:
-            x_new = x - lr * g  # descent
+            x_new = x - lr * g
         else:
-            # x_new = x + sigma * lr * g  # ascent
-            x_new = x + sigma * lr * np.random.uniform(-1, 1, size=x.shape) # sa like ascent in random direction
+            x_new = x + sigma * lr * np.random.uniform(-1, 1, size=x.shape)
 
         x_new = np.clip(x_new, clip_range[0], clip_range[1])
 
-        if np.linalg.norm(x_new - x) < tol or np.linalg.norm(g) < tol:
-            x = x_new
-            history.append(x.copy())
-            f_history.append(f(x))
+        update_norm = np.linalg.norm(x_new - x)
+        grad_norm = np.linalg.norm(g)
+
+        if update_norm < tol or grad_norm < tol:
+            stagnation_counter += 1
+        else:
+            stagnation_counter = 0
+
+        if stagnation_counter > 10:
+            history.append(x_new.copy())
+            f_history.append(f(x_new))
             break
 
-        x_prev = x.copy()
-        f_prev = f_curr
         x = x_new
+        f_prev = f_curr
         history.append(x.copy())
         f_history.append(f(x))
 

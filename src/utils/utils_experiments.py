@@ -508,7 +508,7 @@ def get_experiment_id() -> int :
         f.write(str(new_id))
     return new_id
 
-def generate_summary_csv(benchmark_name, gd_stats, sa_stats, experiment_id, save_dir):
+def generate_summary_csv(benchmark_name, gd_stats, sa_stats, hybrid_stats, experiment_id, save_dir):
     """
     Saves one-line-per-algorithm summary statistics for a benchmark.
     """
@@ -517,6 +517,8 @@ def generate_summary_csv(benchmark_name, gd_stats, sa_stats, experiment_id, save
         summary_data.append({"Algorithm": "GD", **gd_stats})
     if sa_stats is not None:
         summary_data.append({"Algorithm": "SA", **sa_stats})
+    if hybrid_stats is not None:
+        summary_data.append({"Algorithm": "SA-GD", **hybrid_stats})
 
     summary_df = pd.DataFrame(summary_data)
     os.makedirs(save_dir, exist_ok=True)
