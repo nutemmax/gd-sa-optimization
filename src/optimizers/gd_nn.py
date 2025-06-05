@@ -18,6 +18,139 @@ def gd_nn(
     batch_size: int = 32,
     epochs: int = 100,
     tol: float = 1e-6,
+    track_val_loss: bool = True,
+    track_weight_norm: bool = False,
+    track_val_accuracy: bool = False,
+    early_stopping: bool = False,
+    patience: int = 20,
+    min_delta: float = 1e-4,
+    device: str = "cpu",
+    verbose: bool = False
+) -> Tuple[
+    np.ndarray, List[np.ndarray], List[float],
+    Optional[List[float]], Optional[List[float]], Optional[List[float]]
+]:
+    """
+    Gradient-based training of a feedforward neural network using PyTorch optimizers.
+
+    This function trains a neural network using SGD or Adam, with optional early stopping
+    and metric tracking. It returns metrics and model weights in a structure aligned with `sa_nn`.
+
+    Returns:
+        - best_x (np.ndarray): Best flat model weights (by val loss if available).
+        - weight_history (List[np.ndarray]): Flattened weights over epochs.
+        - train_loss_history (List[float]): Training loss per epoch.
+        - val_loss_history (List[float]): Validation loss per epoch (None if not applicable).
+        - weight_norm_history (List[float]): L2 norm per epoch (None if not tracked).
+        - val_accuracy_history (List[float]): Val accuracy per epoch (None if not tracked).
+    """
+    model.to(device)
+    X_train_torch = torch.tensor(X_train, dtype=torch.float32).to(device)
+    y_train_torch = torch.tensor(y_train, dtype=torch.long if loss_type == "cross_entropy" else torch.float32).to(device)
+    train_dataset = TensorDataset(X_train_torch, y_train_torch)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+    if X_val is not None and y_val is not None:
+        X_val_torch = torch.tensor(X_val, dtype=torch.float32).to(device)
+        y_val_torch = torch.tensor(y_val, dtype=torch.long if loss_type == "cross_entropy" else torch.float32).to(device)
+
+    criterion = nn.CrossEntropyLoss() if loss_type == "cross_entropy" else nn.MSELoss()
+
+    if optimizer_type == "sgd":
+        optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    elif optimizer_type == "adam":
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    else:
+        raise ValueError("Unsupported optimizer type")
+
+    weight_history, train_loss_history = [], []
+    val_loss_history, weight_norm_history, val_accuracy_history = [], [], []
+
+    best_weights = model.state_dict()
+    best_val_loss = float('inf')
+    patience_counter = 0
+    unchanged_count = 0
+    stable_threshold = 10
+
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0.0
+        for X_batch, y_batch in train_loader:
+            optimizer.zero_grad()
+            outputs = model(X_batch)
+            loss = criterion(outputs, y_batch)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item() * X_batch.size(0)
+
+        total_loss /= len(train_loader.dataset)
+        train_loss_history.append(total_loss)
+        flat_weights = torch.cat([p.view(-1) for p in model.parameters()]).detach().cpu().numpy()
+        weight_history.append(flat_weights)
+
+        if track_weight_norm:
+            weight_norm_history.append(np.linalg.norm(flat_weights))
+
+        if X_val is not None and y_val is not None:
+            model.eval()
+            with torch.no_grad():
+                val_outputs = model(X_val_torch)
+                val_loss = criterion(val_outputs, y_val_torch).item()
+                val_loss_history.append(val_loss)
+
+                if early_stopping:
+                    if val_loss < best_val_loss - min_delta:
+                        best_val_loss = val_loss
+                        best_weights = model.state_dict()
+                        patience_counter = 0
+                        if verbose:
+                            print(f"[Epoch {epoch}] New best val loss: {val_loss:.6f}")
+                    else:
+                        patience_counter += 1
+                    if patience_counter >= patience:
+                        if verbose:
+                            print(f"Early stopping triggered at epoch {epoch}")
+                        break
+
+                if track_val_accuracy and loss_type == "cross_entropy":
+                    preds = torch.argmax(val_outputs, dim=1)
+                    y_true = y_val_torch if y_val_torch.ndim == 1 else torch.argmax(y_val_torch, dim=1)
+                    acc = (preds == y_true).float().mean().item()
+                    val_accuracy_history.append(acc)
+
+        if epoch > 0 and abs(train_loss_history[-1] - train_loss_history[-2]) < tol:
+            unchanged_count += 1
+        else:
+            unchanged_count = 0
+
+        if unchanged_count >= stable_threshold:
+            if verbose:
+                print(f"Converged at epoch {epoch}")
+            break
+
+    best_x = torch.cat([p.view(-1) for p in model.parameters()]).detach().cpu().numpy()
+    return (
+        best_x,
+        weight_history,
+        train_loss_history,
+        val_loss_history if X_val is not None and y_val is not None else None,
+        weight_norm_history if track_weight_norm else None,
+        val_accuracy_history if track_val_accuracy else None,
+    )
+
+
+def gd_nn_old(
+    model: nn.Module,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_val: Optional[np.ndarray] = None,
+    y_val: Optional[np.ndarray] = None,
+    loss_type: str = "cross_entropy",
+    optimizer_type: str = "sgd",
+    lr: float = 0.01,
+    batch_size: int = 32,
+    epochs: int = 100,
+    tol: float = 1e-6,
     track_val_loss: bool = False,
     track_weight_norm: bool = False,
     track_val_accuracy: bool = False,
