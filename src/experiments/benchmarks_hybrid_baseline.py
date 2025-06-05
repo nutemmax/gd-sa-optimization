@@ -34,12 +34,12 @@ benchmark_funcs = {
 baseline_params = {
     "lr": 0.1,
     "sigma": 0.1,
-    "T0": 1,
-    "max_iter": 10000,
+    "T0": 0.1,
+    "max_iter": 50000,
     "tol": 1e-6
 }
 
-num_runs = 5
+num_runs = 50
 exp_id = get_experiment_id()
 dim=2
 
@@ -91,10 +91,11 @@ for name, (f, grad_f, f_star, x_star) in benchmark_funcs.items():
     # Save CSV summary
     generate_summary_csv(
         f"{name}_hybrid_baseline_parameters",
-        sa_stats=output['stats'],  # pretend it's SA stats
-        gd_stats=None,             # not used here
+        sa_stats=None,
+        gd_stats=None,
+        hybrid_stats=output['stats'],
         experiment_id=exp_id,
-        save_dir=analytical_dir,
+        save_dir=analytical_dir
     )
 
     # Plot best convergence

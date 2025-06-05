@@ -86,7 +86,7 @@ def run_experiments():
         f_star=-200.0
     )
     best_sa_run = min(sa_disc['histories'], key=lambda h: ising_energy(h[-1]))
-    plot_final_spin_config(best_sa_run[-1].reshape(lattice_shape), f"ising_discrete_best_exp{experiment_id}", plots_dir)
+    plot_final_spin_config(best_sa_run[-1].reshape(lattice_shape), f"Ising Discrete Best", f"ising_discrete_best_exp{experiment_id}", plots_dir)
     plot_energy_trajectory(
         [ising_energy(x.reshape(lattice_shape)) for x in best_sa_run],
         f"ising_discrete_best_exp{experiment_id}", plots_dir
