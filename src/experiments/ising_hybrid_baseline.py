@@ -22,13 +22,13 @@ os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
 # === Shared settings ===
-num_runs = 5
+num_runs = 30
 tol = 1e-6
 lattice_shape = (10, 10)
 experiment_id = get_experiment_id()
 dim = lattice_shape[0]
 
-baseline_params = {"lr": 0.1, "sigma": 0.1, "T0": 0.1, "max_iter": 20000, "tol": tol}
+baseline_params = {"lr": 0.01, "sigma": 0.1, "T0": 0.1, "max_iter": 20000, "tol": tol}
 
 relaxed_f = lambda x: relaxed_ising_energy(x.reshape(lattice_shape))
 grad_wrapped = lambda x: grad_relaxed_ising(x.reshape(lattice_shape)).flatten()
