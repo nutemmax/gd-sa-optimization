@@ -33,7 +33,7 @@ sigma = params["sigma"]
 T0 = params["T0"]
 
 # === Shared settings ===
-num_runs = 50
+num_runs = 30
 tol = 1e-6
 lattice_shape = (10, 10)
 experiment_id = get_experiment_id()

@@ -40,7 +40,7 @@ benchmark_funcs = {
 num_runs = 50
 exp_id = get_experiment_id()
 dim = 2
-ascent_method = "unif"
+ascent_method = "ascent"
 
 def plot_best_hybrid_convergence(name, f_histories, f):
     final_vals = [hist[-1] for hist in f_histories]
@@ -62,7 +62,7 @@ for name, (f, grad_f, f_star, x_star) in benchmark_funcs.items():
     print(f"\n==== Running Hybrid SA-GD on {name.upper()} ====")
 
     # extract best hyperparams for hybrid
-    hybrid_params = best_params[name]["hybrid"]
+    hybrid_params = best_params[name][f"hybrid-{ascent_method}"]
     lr = hybrid_params["lr"]
     sigma = hybrid_params["sigma"]
     T0 = hybrid_params["T0"]
