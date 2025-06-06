@@ -46,7 +46,23 @@
             "med": 0.0024991158093834,
             "mean_runtime": 0.6487035393714905
         },
-        "hybrid-ascent": "Gridsearch not found"
+        "hybrid-ascent": {
+            "lr": 0.01,
+            "sigma": 0.1,
+            "T0": 10.0,
+            "ascent_method": "ascent",
+            "rmse": 1277.8757224906271,
+            "rmed": 6.347681995243556,
+            "best": 577.0,
+            "worst": 3601.0,
+            "std": 825.6909401332417,
+            "epsilon": 0.01,
+            "near_optimal_count": 10,
+            "mean": 975.295254532096,
+            "mse": 1632966.3621309423,
+            "med": 4.92459222532096,
+            "mean_runtime": 1.4030160617828369
+        }
     },
     "rastrigin": {
         "sa": {
@@ -95,7 +111,23 @@
             "med": 1.4444326298929548,
             "mean_runtime": 1.0264005184173584
         },
-        "hybrid-ascent": "Gridsearch not found"
+        "hybrid-ascent": {
+            "lr": 0.001,
+            "sigma": 0.5,
+            "T0": 1.0,
+            "ascent_method": "ascent",
+            "rmse": 53.33335035384418,
+            "rmed": 14.994968756290143,
+            "best": 40.48739384873325,
+            "worst": 66.62439293117751,
+            "std": 7.636078903535503,
+            "epsilon": 0.01,
+            "near_optimal_count": 2,
+            "mean": 52.78386646452561,
+            "mse": 2844.4462599658914,
+            "med": 12.880084395125293,
+            "mean_runtime": 2.139204216003418
+        }
     },
     "ackley": {
         "sa": {
@@ -144,7 +176,23 @@
             "med": 0.0002772091795158,
             "mean_runtime": 1.1118168115615843
         },
-        "hybrid-ascent": "Gridsearch not found"
+        "hybrid-ascent": {
+            "lr": 0.001,
+            "sigma": 1.0,
+            "T0": 10.0,
+            "ascent_method": "ascent",
+            "rmse": 0.0082970195749659,
+            "rmed": 8.160273224492422e-06,
+            "best": 0.0082970194196438,
+            "worst": 0.0082970200818377,
+            "std": 2.2929124342933118e-10,
+            "epsilon": 0.001,
+            "near_optimal_count": 25,
+            "mean": 0.0082970195749659,
+            "mse": 6.884053382736865e-05,
+            "med": 8.16027322449242e-06,
+            "mean_runtime": 2.0430298805236817
+        }
     },
     "ising": {
         "ising_relaxed": {
@@ -159,7 +207,7 @@
                 "std": 25.85369910667965,
                 "rmse": 52.64794707785515,
                 "mse": 2771.806331512637,
-                "mean_runtime": "NaN",
+                "mean_runtime": "Nan",
                 "mean_distance_to_x_star": "NaN"
             },
             "gd": {
@@ -174,7 +222,21 @@
                 "mean_runtime": 1.267560453414917,
                 "mean_distance_to_x_star": "NaN"
             },
-            "hybrid-unif": "Gridsearch not found",
+            "hybrid-unif": {
+                "algorithm": "Hybrid_SA_GD",
+                "lr": 0.1,
+                "sigma": 2.0,
+                "T0": 10.0,
+                "mean": -98.5992553652067,
+                "best": -156.0,
+                "worst": -19.886040165174748,
+                "std": 40.73631023631389,
+                "rmse": 109.27743584180485,
+                "mse": 11941.557984159774,
+                "rmed": 10.455088873446044,
+                "mean_runtime": 24.19396710395813,
+                "mean_distance_to_x_star": "NaN"
+            },
             "hybrid-ascent": "Gridsearch not found"
         },
         "ising_discrete": {
