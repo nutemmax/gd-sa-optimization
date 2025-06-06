@@ -32,8 +32,10 @@ The main components are:
 ## Usage
 
 Install dependencies:
+
 ```bash
-pip install -r requirements.txt ```
+pip install -r requirements.txt
+```
 
 Run grid search (from  notebooks):
 
