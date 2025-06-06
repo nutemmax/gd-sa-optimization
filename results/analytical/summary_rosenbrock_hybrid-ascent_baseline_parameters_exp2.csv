@@ -1,0 +1,2 @@
+Algorithm,rmse,rmed,best,worst,std,epsilon,near_optimal_count,mean,mse,med,mae,mean_runtime_sec
+SA-GD-ascent,3604.8422156871165,14.405554484295283,3601.0,3609.0,3.996798718974975,0.01,26,3604.84,12994887.4,13.84,3604.84,3.8223874235153197

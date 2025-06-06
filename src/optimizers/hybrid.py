@@ -9,6 +9,7 @@ def sa_gd_hybrid(
     T0=10.0,
     max_iter=10000,
     tol=1e-6,
+    ascent_method = "unif",
     x_init=None,
     init_range=None,
     name=None
@@ -39,9 +40,20 @@ def sa_gd_hybrid(
     # determine dimension and clip range
     dim = len(x_init) if x_init is not None else 2
     if init_range is None:
-        clip_range = (-2, 2) if name and name.lower() == "rosenbrock" else (-5, 5)
+        if name:
+            name = name.lower()
+            if name == "rosenbrock":
+                clip_range = (-2, 2)
+            elif name.startswith("ising"):
+                clip_range = (-1, 1)
+            else:
+                clip_range = (-5, 5)
+        else:
+            clip_range = (-5, 5)
     else:
         clip_range = init_range
+
+    print(f"Clip range : {clip_range}")
 
     # initialize x
     x = np.array(x_init if x_init is not None else np.random.uniform(*clip_range, size=dim), dtype=float)
@@ -63,7 +75,12 @@ def sa_gd_hybrid(
         if a < P:
             x_new = x - lr * g
         else:
-            x_new = x + sigma * lr * np.random.uniform(-1, 1, size=x.shape)
+            if ascent_method == "unif" or ascent_method == "rp": 
+                x_new = x + sigma * lr * np.random.uniform(-1, 1, size=x.shape) # random perturbation
+            elif ascent_method == "gradient_ascent" or ascent_method == "ascent": 
+                x_new = x + sigma * lr * g # gradient ascent
+            else :
+                raise ValueError(f"Invalid ascent or perturbation method. Choose between : unif, rp or gradient_ascent, ascent.")
 
         x_new = np.clip(x_new, clip_range[0], clip_range[1])
 

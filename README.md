@@ -1,57 +1,85 @@
 # GD-SA Optimization
 
-This repository contains the code for a comparative study of Simulated Annealing (SA) and Gradient Descent (GD) applied to benchmark functions and the Ising model.
+This repository contains the code for a comparative study of Simulated Annealing (SA) and Gradient Descent (GD), including their hybridization, applied to benchmark functions, the Ising model, and neural network training.
 
 ## Overview
 
-- Algorithms: Gradient Descent (GD), Simulated Annealing (SA) in both continuous and discrete versions
-- Problems: Rosenbrock, Rastrigin, Ackley, Ising (relaxed and discrete)
-- Experiments: baseline (fixed hyperparameters) and best (grid search), repeated over 50 runs
+- **Algorithms**:
+  - Gradient Descent (GD)
+  - Simulated Annealing (SA): continuous and discrete variants
+  - Hybrid SA-GD: alternating descent and ascent steps, using either gradient-based ("ascent") or random perturbation-based ("unif") updates
+- **Problems**:
+  - Benchmark functions: Rosenbrock, Rastrigin, Ackley
+  - Ising model: relaxed (continuous) and discrete versions
+  - Neural network training: binary classification on the UCI wine quality dataset
+- **Experiments**:
+  - Baseline: fixed hyperparameters
+  - Best: grid-searched optimal hyperparameters
+  - All experiments are bootstrapped over 50 runs
 
 ## Structure
 
 The main components are:
-- `src/optimizers/`: core implementations of GD and SA
-- `src/problems/`: benchmark and Ising objective functions
-- `src/experiments/`: experiment scripts for all runs
-- `src/utils/`: bootstrapping, plotting, summary utilities
-- `results/`: stores CSV outputs, plots, and best hyperparameters
-- `notebooks/`: optional analysis notebooks
+
+- `src/optimizers/`: core implementations of GD, SA, and Hybrid algorithms
+  - also includes `gd_nn.py` and `sa_nn.py` for using GD/SA to train neural networks
+- `src/problems/`: objective functions for benchmarks, Ising, and helper functions for neural networks
+- `src/experiments/`: scripts to run all experiments (baseline, best, hybrid)
+- `src/utils/`: utilities for experiment bootstrapping, evaluation, and plotting
+- `results/`: stores all result CSVs, plots, and selected hyperparameters
+- `notebooks/`: Jupyter notebooks for grid search and additional analyses
 
 ## Usage
 
 Install dependencies:
-``` pip install -r requirements.txt ```
+```bash
+pip install -r requirements.txt ```
 
-Run grid search:
-```
-python src/experiments/gridsearch/benchmarks_gridsearch.py
-python src/experiments/gridsearch/ising_gridsearch.py
-```
+Run grid search (from  notebooks):
+
+- `notebooks/benchmarks_gridsearch.ipynb`
+- `notebooks/ising_gridsearch.ipynb`
+
 
 Select best hyperparameters from gridsearch:
 ```
 python src/experiments/select_best_hyperparams.py
 ```
 
-Run experiments:
+Run experiments (baseline and hypertuned setting - best):
 ```
+# Benchmarks
 python src/experiments/benchmarks_baseline.py
-python src/experiments/ising_baseline.py
 python src/experiments/benchmarks_best.py
+python src/experiments/benchmarks_hybrid_baseline.py
+python src/experiments/benchmarks_hybrid_best.py
+
+# Ising model
+python src/experiments/ising_baseline.py
 python src/experiments/ising_best.py
+python src/experiments/ising_hybrid_baseline.py
+python src/experiments/ising_hybrid_best.py
+
 ```
 
+## Notebooks
+- `benchmarks_gridsearch.ipynb` and `ising_gridsearch.ipynb`: hyperparameter tuning via grid search
+- `nn_experiments.ipynb`: train a simple neural network using GD and SA on the UCI Wine Quality dataset
 
 ## Output
 
-- CSV summaries are in `results/analytical/`
-- Convergence plots are in `results/plots/`
-- Grid search outputs and selected parameters are in `results/gridsearch/`
+- CSV summaries: `results/analytical/`
+- Convergence and energy plots: `results/plots/`
+- Finalized experiment outputs and plots: `results/analytical/final/` and `results/plots/final/`
+- Grid search logs and selected parameters: results/gridsearch/
 
 ## Notes
 
-- All experiments are bootstrapped with 50 runs
-- Only SA is used for the discrete Ising model
-- Relaxed Ising model uses flattened 10x10 lattices
-- Best hyperparameters are selected based on lowest mean value across runs
+- All experiments are bootstrapped with 50 random initializations
+- Only SA is used for the **discrete** Ising model
+- Relaxed Ising model uses flattened 10×10 lattices
+- Hybrid SA-GD supports two ascent variants:
+  - `"ascent"`: gradient ascent steps
+  - `"unif"`: uniform random perturbation
+- On the Ising model, both ascent methods share the same tuned hyperparameters from `"hybrid-unif"`
+- In the neural network notebook, SA performs less stably and less accurately than GD, confirming its limited use for gradient-based learning

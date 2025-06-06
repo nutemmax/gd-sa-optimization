@@ -5,36 +5,13 @@ import pandas as pd
 # === Setup ===
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 FINAL_DIR = os.path.join(ROOT_DIR, 'results', 'gridsearch', 'final')
-HYBRID_DIR = os.path.join(ROOT_DIR, 'results', 'gridsearch')
 OUTPUT_PATH = os.path.join(FINAL_DIR, 'best_hyperparams.json')
 
 benchmarks = ['rosenbrock', 'rastrigin', 'ackley']
 ising_variants = ['ising_relaxed', 'ising_discrete']
 
-FILENAME_MAP = {
-    'rosenbrock': {
-        'sa': 'gridsearch_sa_rosenbrock_new.csv',
-        'gd': 'gridsearch_gd_rosenbrock_new.csv',
-        'hybrid': 'gridsearch_hybrid-unif_rosenbrock_new.csv'
-    },
-    'rastrigin': {
-        'sa': 'gridsearch_sa_rastrigin_new.csv',
-        'gd': 'gridsearch_gd_rastrigin_new.csv',
-        'hybrid': 'gridsearch_hybrid-unif_rastrigin_new.csv'
-    },
-    'ackley': {
-        'sa': 'gridsearch_sa_ackley_new.csv',
-        'gd': 'gridsearch_gd_ackley_new.csv',
-        'hybrid': 'gridsearch_hybrid-unif_ackley_new.csv'
-    },
-    'ising_relaxed': {
-        'sa': 'gridsearch_sa_continuous_ising_new.csv',
-        'gd': 'gridsearch_gd_continuous_ising_new.csv'
-    },
-    'ising_discrete': {
-        'sa': 'gridsearch_sa_discrete_ising_new.csv'
-    }
-}
+# === Hybrid ascent variants ===
+hybrid_methods = ['unif', 'ascent']  # 'unif' = random perturbation, 'ascent' = gradient ascent
 
 def load_best_config(path, select_by="rmse"):
     df = pd.read_csv(path)
@@ -48,30 +25,62 @@ best_params = {}
 # --- Benchmarks ---
 for benchmark in benchmarks:
     best_params[benchmark] = {}
-    for algo in ['sa', 'gd', 'hybrid']:
-        filename = FILENAME_MAP[benchmark].get(algo)
-        if filename:
-            dir_path = HYBRID_DIR if algo == 'hybrid' else FINAL_DIR
-            path = os.path.join(dir_path, filename)
-            if os.path.exists(path):
-                metric = "rmed" if algo == "hybrid" else "rmse"
-                best_params[benchmark][algo] = load_best_config(path, select_by=metric)
-            else:
-                print(f"Missing: {path}")
-                best_params[benchmark][algo] = "Gridsearch not found"
+
+    # SA and GD
+    for algo in ['sa', 'gd']:
+        filename = f"gridsearch_{algo}_{benchmark}_new.csv"
+        path = os.path.join(FINAL_DIR, filename)
+        if os.path.exists(path):
+            best_params[benchmark][algo] = load_best_config(path, select_by="rmed")
+        else:
+            print(f"Missing: {path}")
+            best_params[benchmark][algo] = "Gridsearch not found"
+
+    # Hybrid variants
+    for method in hybrid_methods:
+        key = f"hybrid-{method}"
+        filename = f"gridsearch_hybrid-{method}_{benchmark}_new.csv"
+        path = os.path.join(FINAL_DIR, filename)
+        if os.path.exists(path):
+            best_params[benchmark][key] = load_best_config(path, select_by="rmed")
+        else:
+            print(f"Missing: {path}")
+            best_params[benchmark][key] = "Gridsearch not found"
 
 # --- Ising variants ---
 best_params['ising'] = {}
 for variant in ising_variants:
     best_params['ising'][variant] = {}
-    for algo in FILENAME_MAP[variant]:
-        filename = FILENAME_MAP[variant][algo]
-        path = os.path.join(FINAL_DIR, filename)
-        if os.path.exists(path):
-            best_params['ising'][variant][algo] = load_best_config(path)
+
+    # SA
+    sa_filename = f"gridsearch_sa_{'discrete' if variant == 'ising_discrete' else 'continuous'}_ising_new.csv"
+    sa_path = os.path.join(FINAL_DIR, sa_filename)
+    if os.path.exists(sa_path):
+        best_params['ising'][variant]['sa'] = load_best_config(sa_path, select_by="rmse")
+    else:
+        print(f"Missing: {sa_path}")
+        best_params['ising'][variant]['sa'] = "Gridsearch not found"
+
+    # GD (only for relaxed version)
+    if variant == 'ising_relaxed':
+        gd_filename = f"gridsearch_gd_continuous_ising_new.csv"
+        gd_path = os.path.join(FINAL_DIR, gd_filename)
+        if os.path.exists(gd_path):
+            best_params['ising'][variant]['gd'] = load_best_config(gd_path, select_by="rmse")
         else:
-            print(f"Missing: {path}")
-            best_params['ising'][variant][algo] = "Gridsearch not found"
+            print(f"Missing: {gd_path}")
+            best_params['ising'][variant]['gd'] = "Gridsearch not found"
+
+        # Hybrid variants
+        for method in hybrid_methods:
+            key = f"hybrid-{method}"
+            hybrid_filename = f"gridsearch_hybrid-{method}_ising_relaxed_new.csv"
+            hybrid_path = os.path.join(FINAL_DIR, hybrid_filename)
+            if os.path.exists(hybrid_path):
+                best_params['ising'][variant][key] = load_best_config(hybrid_path, select_by="rmed")
+            else:
+                print(f"Missing: {hybrid_path}")
+                best_params['ising'][variant][key] = "Gridsearch not found"
 
 # === Save JSON ===
 os.makedirs(FINAL_DIR, exist_ok=True)

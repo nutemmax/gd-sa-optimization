@@ -40,6 +40,7 @@ benchmark_funcs = {
 num_runs = 50
 exp_id = get_experiment_id()
 dim = 2
+ascent_method = "unif"
 
 def plot_best_hybrid_convergence(name, f_histories, f):
     final_vals = [hist[-1] for hist in f_histories]
@@ -53,7 +54,7 @@ def plot_best_hybrid_convergence(name, f_histories, f):
     plt.title(f"Best-run Convergence on {name} (Hybrid Best)")
     plt.legend()
     plt.grid(True)
-    plt.savefig(os.path.join(plots_dir, f"{name}_hybrid_best_convergence_exp{exp_id}.png"))
+    plt.savefig(os.path.join(plots_dir, f"{name}_hybrid-{ascent_method}_best_convergence_exp{exp_id}.png"))
     plt.close()
 
 # === Run Hybrid SA-GD with Best Params ===
@@ -93,17 +94,19 @@ for name, (f, grad_f, f_star, x_star) in benchmark_funcs.items():
         T0=T0,
         max_iter=50000,
         tol=1e-6,
+        ascent_method = ascent_method,
         init_range=init_range
     )
 
     # save summary
     generate_summary_csv(
-        f"{name}_hybrid_best_parameters",
+        f"{name}_hybrid-{ascent_method}_best_parameters",
         sa_stats=None,
         gd_stats=None,
         hybrid_stats=output['stats'],
         experiment_id=exp_id,
-        save_dir=analytical_dir
+        save_dir=analytical_dir,
+        name_alg=f"SA-GA-{ascent_method}"
     )
 
     # best convergence plot

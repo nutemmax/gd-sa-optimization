@@ -1,51 +1,66 @@
 gs-sa-optimization/
 ├── notebooks/
-│   └── benchmark_analysis.ipynb
+│   ├── ising_gridsearch.ipynb             # grid search for SA, GD, Hybrid on Ising
+│   ├── benchmarks_gridsearch.ipynb        # grid search for SA, GD, Hybrid on benchmark functions
 │
 ├── src/
-│   ├── optimizers/
-│   │   ├── gd.py
-│   │   ├── sa.py
+│   ├── optimizers/                        # all algorithm implementations
+│   │   ├── gd.py                          # vanilla gradient descent
+│   │   ├── sa.py                          # simulated annealing (discrete and continuous)
+│   │   ├── hybrid.py                      # hybrid SA-GD algorithm (ascent + unif)
+│   │   ├── gd_nn.py                       # GD-based training for neural networks
+│   │   ├── sa_nn.py                       # SA-based training for neural networks
 │   │   └── __init__.py
 │   │
-│   ├── problems/
-│   │   ├── benchmarks.py
-│   │   ├── ising.py               # optional split if desired
+│   ├── problems/                          # all optimization problem definitions
+│   │   ├── benchmarks.py                  # standard test functions: rosenbrock, rastrigin, ackley
+│   │   ├── ising.py                       # discrete and relaxed Ising model + gradient
+│   │   ├── nn.py                          # helper functions for forward pass, loss, weight management
 │   │   └── __init__.py
 │   │
-│   ├── experiments/
-│   │   ├── benchmark_baseline.py
-│   │   ├── benchmark_best.py
-│   │   ├── ising_baseline.py
-│   │   ├── ising_best.py
-│   │   ├── select_best_hyperparams.py # select best hyperparams from the gridsearch results
+│   ├── experiments/                       # scripts for running experiments (baseline + best + hybrid)
+│   │   ├── benchmarks_baseline.py         # SA + GD on benchmarks (baseline hyperparams)
+│   │   ├── benchmarks_best.py             # SA + GD on benchmarks (gridsearched best)
+│   │   ├── benchmarks_hybrid_baseline.py  # Hybrid SA-GD (ascent/unif) on benchmarks (baseline)
+│   │   ├── benchmarks_hybrid_best.py      # Hybrid SA-GD (ascent/unif) on benchmarks (best)
+│   │   ├── ising_baseline.py              # SA (discrete + relaxed) + GD on Ising (baseline)
+│   │   ├── ising_best.py                  # SA + GD on Ising (best)
+│   │   ├── ising_hybrid_baseline.py       # Hybrid SA-GD (ascent/unif) on relaxed Ising (baseline)
+│   │   ├── ising_hybrid_best.py           # Hybrid SA-GD (ascent/unif) on relaxed Ising (best)
+│   │   ├── select_best_hyperparams.py     # selects best hyperparameters from grid search logs
 │   │   └── __init__.py
 │   │
 │   ├── utils/
-│   │   ├── utils_experiments.py
+│   │   ├── utils_experiments.py           # bootstrap_experiment_ising, bootstrap_experiment_benchmarks, summary writers
+│   │   ├── utils_plots.py                 # convergence plots, energy trajectories, spin config plots
 │   │
 │   └── config/
-│       ├── best_hyperparams.json
+│       ├── best_hyperparams.json          # final selected hyperparameters from grid search
 │       └── __init__.py
 │
 ├── results/
-│   ├── analytical/
-│   │   ├── summary_rastrigin_exp3.csv
+│   ├── analytical/                        # all CSV summaries of experiment results
+│   │   ├── final/                         # finalized CSVs for all algorithms and variants
+│   │   │   ├── summary_ackley_baseline_parameters_exp15.csv
+│   │   │   ├── summary_ising_discrete_baseline_exp17.csv
+│   │   │   ├── summary_rosenbrock_hybrid-unif_best_parameters_exp3.csv
+│   │   ├── summary_rastrigin_exp3.csv     # temp/debug outputs
 │   │   ├── rastrigin_best.csv
 │   │   ├── rosenbrock_baseline.csv
 │   │   ├── ising_discrete_best.csv
 │   │   └── ising_relaxed_baseline.csv
-│   │
-│   └── plots/
-│       ├── ackley_baseline_parameters_convergence_exp1.png
-│       ├── rastrigin_baseline_parameters_convergence_exp1.png
-│       ├── rosenbrock_baseline_parameters_convergence_exp1.png
-│       ├── ackley_best_parameters_convergence_exp1.png
-│       ├── rastrigin_best_parameters_convergence_exp1.png
-│       ├── rosenbrock_best_parameters_convergence_exp1.png
-│       └── ising_baseline_parameters_convergence_exp1.png
 │
-├── experiment_id.txt
+│   └── plots/                             # all convergence and energy plots
+│       ├── final/                         # finalized plots for summary CSVs above
+│       │   ├── ackley_baseline_parameters_convergence_exp15.png
+│       │   ├── hist_final_energies_ising_relaxed_baseline_exp17.png
+│       │   ├── ising_relaxed_best_convergence_exp14.png
+│       │   ├── rosenbrock_best_parameters_convergence_exp16.png
+│       ├── ackley_hybrid-unif_baseline_convergence_exp2.png
+│       ├── rosenbrock_baseline_parameters_convergence_exp1.png
+│       ├── rosenbrock_hybrid-unif_baseline_convergence_exp2.png
+│
+├── experiment_id.txt                     # keeps track of experiment IDs across runs
 ├── requirements.txt
 ├── .gitignore
 ├── README.md

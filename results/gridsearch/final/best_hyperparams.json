@@ -1,20 +1,20 @@
 {
     "rosenbrock": {
         "sa": {
-            "T0": 10.0,
-            "alpha": 0.95,
+            "T0": 100.0,
+            "alpha": 0.999,
             "step_size": 0.005,
-            "rmse": 8.67662302721634e-07,
-            "rmed": 0.0012941370782121,
-            "best": 7.550663100643524e-08,
-            "worst": 3.41859853254956e-06,
-            "std": 6.563869180037865e-07,
-            "epsilon": 1e-08,
-            "near_optimal_count": 2.0,
-            "mean": 5.674452268172662e-07,
-            "mse": 7.528378715642083e-13,
-            "med": 0.001001877270167,
-            "mean_runtime": 0.1448084831237793
+            "rmse": 1.659349674788956e-06,
+            "rmed": 0.0004904954331764,
+            "best": 3.148988775919404e-09,
+            "worst": 4.009861139596175e-06,
+            "std": 1.1498262641216684e-06,
+            "epsilon": 1e-09,
+            "near_optimal_count": 1.0,
+            "mean": 1.196386603718974e-06,
+            "mse": 2.7534413432222145e-12,
+            "med": 0.000380620556914,
+            "mean_runtime": 0.7195118522644043
         },
         "gd": {
             "lr": 0.001,
@@ -30,7 +30,7 @@
             "med": 0.0025000102665617,
             "mean_runtime": 0.422243709564209
         },
-        "hybrid": {
+        "hybrid-unif": {
             "lr": 0.001,
             "sigma": 2.0,
             "T0": 10.0,
@@ -45,24 +45,25 @@
             "mse": 1.5580855323755062e-12,
             "med": 0.0024991158093834,
             "mean_runtime": 0.6487035393714905
-        }
+        },
+        "hybrid-ascent": "Gridsearch not found"
     },
     "rastrigin": {
         "sa": {
-            "T0": 100.0,
-            "alpha": 0.995,
+            "T0": 10.0,
+            "alpha": 0.999,
             "step_size": 0.5,
-            "rmse": 0.3319397317384878,
-            "rmed": 0.2000748492943196,
-            "best": 0.0139759051128809,
-            "worst": 1.2369951753929715,
-            "std": 0.2922220929885483,
+            "rmse": 0.4704976218037381,
+            "rmed": 0.0152652042179802,
+            "best": 0.0156592395781434,
+            "worst": 1.563048428174497,
+            "std": 0.3972751626710628,
             "epsilon": 0.01,
-            "near_optimal_count": 3.0,
-            "mean": 0.1574491469523144,
-            "mse": 0.1101839855066192,
-            "med": 0.0592252451617049,
-            "mean_runtime": 0.0914524841308593
+            "near_optimal_count": 2.0,
+            "mean": 0.2520723254299329,
+            "mse": 0.2213680121229733,
+            "med": 0.0138348390681238,
+            "mean_runtime": 0.2205718517303466
         },
         "gd": {
             "lr": 0.5,
@@ -78,7 +79,7 @@
             "med": 1.199608544375082e-08,
             "mean_runtime": 0.0008093357086181
         },
-        "hybrid": {
+        "hybrid-unif": {
             "lr": 0.01,
             "sigma": 2.0,
             "T0": 0.1,
@@ -93,7 +94,8 @@
             "mse": 632.2591548380602,
             "med": 1.4444326298929548,
             "mean_runtime": 1.0264005184173584
-        }
+        },
+        "hybrid-ascent": "Gridsearch not found"
     },
     "ackley": {
         "sa": {
@@ -126,7 +128,7 @@
             "med": 0.0002831277745424,
             "mean_runtime": 1.234795618057251
         },
-        "hybrid": {
+        "hybrid-unif": {
             "lr": 0.0001,
             "sigma": 2.0,
             "T0": 10.0,
@@ -141,7 +143,8 @@
             "mse": 6.245386435763496e-07,
             "med": 0.0002772091795158,
             "mean_runtime": 1.1118168115615843
-        }
+        },
+        "hybrid-ascent": "Gridsearch not found"
     },
     "ising": {
         "ising_relaxed": {
@@ -156,8 +159,8 @@
                 "std": 25.85369910667965,
                 "rmse": 52.64794707785515,
                 "mse": 2771.806331512637,
-                "mean_runtime": NaN,
-                "mean_distance_to_x_star": NaN
+                "mean_runtime": "NaN",
+                "mean_distance_to_x_star": "NaN"
             },
             "gd": {
                 "algorithm": "GD_continuous",
@@ -169,8 +172,10 @@
                 "rmse": 79.60045824173379,
                 "mse": 6336.232952294005,
                 "mean_runtime": 1.267560453414917,
-                "mean_distance_to_x_star": NaN
-            }
+                "mean_distance_to_x_star": "NaN"
+            },
+            "hybrid-unif": "Gridsearch not found",
+            "hybrid-ascent": "Gridsearch not found"
         },
         "ising_discrete": {
             "sa": {
@@ -184,7 +189,7 @@
                 "rmse": 91.06305507723756,
                 "mse": 91.06305507723756,
                 "mean_runtime": 0.3923294734954834,
-                "hamming_best_to_gt": NaN
+                "hamming_best_to_gt": "NaN"
             }
         }
     }

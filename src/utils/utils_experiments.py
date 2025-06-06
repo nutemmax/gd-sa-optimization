@@ -385,109 +385,6 @@ def bootstrap_experiment_ising(
 #     }
 
 
-def bootstrap_experiment_old(
-    algorithm_function,
-    runs,
-    *args,
-    f=None,
-    is_discrete=False,
-    best_state=None,
-    hamming_threshold=0,
-    x_init_strategy=None,
-    dim=None,
-    f_star=0.0,
-    x_star=None,
-    **kwargs
-):
-    """
-    Runs the optimization algorithm multiple times and collects summary statistics.
-
-    Returns:
-        dict: {
-            'final_values': [...],
-            'final_states': [...],
-            'stats': {...},
-            'epsilon': float or None,
-            'near_optimal_count': int or None,
-            'state_histories': [...],
-            'energy_histories': [...],
-            'runtimes': [...],
-        }
-    """
-    final_values = []
-    final_states = []
-    state_histories = []
-    energy_histories = []
-    runtimes = []
-
-    # fetch init_range from kwargs only once
-    # init_range = kwargs.get("init_range", (-5,5))
-    
-    if f is not None and hasattr(f, '__name__'):
-        fname = f.__name__.lower()
-        print(f"function name : {fname}")
-        if fname == "rosenbrock":
-            init_range = (-2, 2)
-        elif fname.startswith("ising"):
-            init_range = (-1, 1)
-        else:
-            init_range = (-5, 5)
-    else:
-        init_range = (-5, 5)
-
-    for i in range(1, runs + 1):
-        print(f'Run {i}/{runs}...', flush=True)
-        start_time = time.time()
-
-        current_kwargs = kwargs.copy()
-
-        # custom init strategy
-        if "x_init" in current_kwargs and current_kwargs["x_init"] is None:
-            inferred_dim = dim if dim is not None else 2
-            current_kwargs["x_init"] = np.random.uniform(*init_range, size=inferred_dim)
-        
-        final_solution, history, f_history = algorithm_function(*args, **current_kwargs)
-
-        duration = time.time() - start_time
-        final_value = f_history[-1]
-
-        final_values.append(final_value)
-        final_states.append(final_solution)
-        state_histories.append(history)
-        energy_histories.append(f_history)
-        runtimes.append(duration)
-
-    if is_discrete:
-        stats = evaluate_discrete_results(
-            final_states=final_states,
-            best_state=best_state,
-            threshold=hamming_threshold,
-            runtimes=runtimes
-        )
-        epsilon = None
-        near_optimal_count = None
-    else:
-        stats = evaluate_continuous_results(
-            final_values=final_values,
-            runtimes=runtimes,
-            final_states=final_states,
-            x_star=x_star,
-            f_star=f_star
-        )
-        epsilon = stats['epsilon']
-        near_optimal_count = stats['near_optimal_count']
-
-    return {
-        'final_values': final_values,
-        'final_states': final_states,
-        'stats': stats,
-        'epsilon': epsilon,
-        'near_optimal_count': near_optimal_count,
-        'histories': state_histories,
-        'f_histories': energy_histories,
-        'runtimes': runtimes
-    }
-
 
 # --------------------------------
 # Experiment ID & Result Saving
@@ -508,7 +405,7 @@ def get_experiment_id() -> int :
         f.write(str(new_id))
     return new_id
 
-def generate_summary_csv(benchmark_name, gd_stats, sa_stats, hybrid_stats, experiment_id, save_dir):
+def generate_summary_csv(benchmark_name, gd_stats, sa_stats, hybrid_stats, experiment_id, save_dir, name_alg = None):
     """
     Saves one-line-per-algorithm summary statistics for a benchmark.
     """
@@ -518,7 +415,7 @@ def generate_summary_csv(benchmark_name, gd_stats, sa_stats, hybrid_stats, exper
     if sa_stats is not None:
         summary_data.append({"Algorithm": "SA", **sa_stats})
     if hybrid_stats is not None:
-        summary_data.append({"Algorithm": "SA-GD", **hybrid_stats})
+        summary_data.append({"Algorithm": f"{name_alg}", **hybrid_stats})
 
     summary_df = pd.DataFrame(summary_data)
     os.makedirs(save_dir, exist_ok=True)
