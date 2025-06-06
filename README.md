@@ -42,12 +42,14 @@ Run grid search (from  notebooks):
 
 
 Select best hyperparameters from gridsearch:
-```
+
+```bash
 python src/experiments/select_best_hyperparams.py
 ```
 
 Run experiments (baseline and hypertuned setting - best):
-```
+
+```bash
 # Benchmarks
 python src/experiments/benchmarks_baseline.py
 python src/experiments/benchmarks_best.py
@@ -59,7 +61,6 @@ python src/experiments/ising_baseline.py
 python src/experiments/ising_best.py
 python src/experiments/ising_hybrid_baseline.py
 python src/experiments/ising_hybrid_best.py
-
 ```
 
 ## Notebooks
