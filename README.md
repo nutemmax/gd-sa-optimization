@@ -1,20 +1,27 @@
 # GD-SA Optimization
 
-This repository contains the code for a comparative study of Simulated Annealing (SA) and Gradient Descent (GD), including their hybridization, applied to benchmark functions, the Ising model, and neural network training.
+This repository contains the code and experiments for a comparative study of Simulated Annealing (SA) and Gradient Descent (GD), including hybrid strategies, applied to benchmark functions, the Ising model, and neural network training.
 
 ## Overview
 
-- **Algorithms**:
+- **Algorithms:**
   - Gradient Descent (GD)
   - Simulated Annealing (SA): continuous and discrete variants
-  - Hybrid SA-GD: alternating descent and ascent steps, using either gradient-based ("ascent") or random perturbation-based ("unif") updates
-- **Problems**:
+  - Hybrid SA-GD:
+    - `"ascent"`: deterministic gradient ascent steps
+    - `"unif"`: random uniform perturbation steps
+
+- **Problems:**
   - Benchmark functions: Rosenbrock, Rastrigin, Ackley
-  - Ising model: relaxed (continuous) and discrete versions
-  - Neural network training: binary classification on the UCI wine quality dataset
-- **Experiments**:
-  - Baseline: fixed hyperparameters
-  - Best: grid-searched optimal hyperparameters
+  - Ising model:
+    - Relaxed (continuous) version: both GD and SA used
+    - Discrete version: only SA used
+  - Neural network training: binary classification on the UCI Wine Quality dataset
+
+- **Experiments:**
+  - Baseline: using fixed hyperparameters
+  - Best: using grid-searched optimal hyperparameters
+  - Hybrid: evaluated in both baseline and best settings
   - All experiments are bootstrapped over 50 runs
 
 ## Structure
@@ -82,7 +89,7 @@ python src/experiments/ising_hybrid_best.py
 - Only SA is used for the **discrete** Ising model
 - Relaxed Ising model uses flattened 10×10 lattices
 - Hybrid SA-GD supports two ascent variants:
-  - `"ascent"`: gradient ascent steps
-  - `"unif"`: uniform random perturbation
+  - `"ascent"`: gradient ascent steps (SAGDA)
+  - `"unif"`: uniform random perturbation (SAGDP)
 - On the Ising model, both ascent methods share the same tuned hyperparameters from `"hybrid-unif"`
 - In the neural network notebook, SA performs less stably and less accurately than GD, confirming its limited use for gradient-based learning
