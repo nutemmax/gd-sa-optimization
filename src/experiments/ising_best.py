@@ -15,7 +15,7 @@ from src.problems.ising import ising_energy, relaxed_ising_energy, grad_relaxed_
 from src.utils.utils_plots import plot_spin_evolution, plot_energy_trajectory, plot_final_spin_config
 from src.utils.utils_experiments import bootstrap_experiment_ising, get_experiment_id, evaluate_ising_results, generate_summary_csv
 
-# === Paths ===
+# === paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 results_dir = os.path.join(base_dir, "results")
 plots_dir = os.path.join(results_dir, "plots")
@@ -24,11 +24,11 @@ gridsearch_dir = os.path.join(results_dir, "gridsearch")
 os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
-# === Load best hyperparameters ===
+# === load best hyperparameters ===
 with open(os.path.join(gridsearch_dir, "best_hyperparams.json")) as f:
     best_params = json.load(f)
 
-# === Shared settings ===
+# === shared settings ===
 num_runs = 50
 tol = 1e-6
 lattice_shape = (10, 10)
@@ -57,7 +57,7 @@ def plot_combined_convergence(name, sa_histories, gd_histories, relaxed_f):
     plt.savefig(os.path.join(plots_dir, f"{name}_best_convergence_exp{experiment_id}.png"))
 
 def run_experiments():
-    # === Discrete Ising ===
+    # === discrete ising ===
     print("Running SA on discrete Ising (best)")
     x_inits_disc = [np.random.choice([-1, 1], size=lattice_shape) for _ in range(num_runs)]
 
@@ -94,7 +94,7 @@ def run_experiments():
     df_disc = pd.DataFrame([{"Algorithm": "SA", **sa_disc["stats"]}])
     df_disc.to_csv(os.path.join(analytical_dir, f"summary_ising_discrete_best_exp{experiment_id}.csv"), index=False)
 
-    # === Relaxed Ising ===
+    # === relaxed ising ===
     print("Running SA and GD on relaxed Ising (best)")
     x_inits_cont = [np.random.uniform(-1, 1, size=lattice_shape) for _ in range(num_runs)]
     x_inits_flat = [x.flatten() for x in x_inits_cont]
@@ -137,7 +137,7 @@ def run_experiments():
     generate_summary_csv("ising_relaxed_best", gd_results["stats"], sa_results["stats"], experiment_id, analytical_dir)
     plot_combined_convergence("ising_relaxed", sa_results["histories"], gd_results["histories"], relaxed_f)
 
-    # === Save final energies per run ===
+    # === save final energies per run ===
     final_energy_data = []
 
     for i, val in enumerate(sa_results["final_values"]):
@@ -155,7 +155,7 @@ def run_experiments():
     df_final_energies = pd.DataFrame(final_energy_data)
     df_final_energies.to_csv(os.path.join(analytical_dir, f"final_energies_ising_relaxed_best_exp{experiment_id}.csv"), index=False)
 
-    # === Plot histogram ===
+    # === plot histogram ===
     plt.figure(figsize=(10, 6))
     plt.hist(sa_results["final_values"], bins=20, alpha=0.6, label="SA")
     plt.hist(gd_results["final_values"], bins=20, alpha=0.6, label="GD")

@@ -17,7 +17,7 @@ from src.optimizers.hybrid import sa_gd_hybrid
 from src.utils.utils_experiments import bootstrap_experiment_benchmarks, get_experiment_id, generate_summary_csv
 from src.utils.utils_plots import plot_energy_trajectory
 
-# === Paths ===
+# === paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 results_dir = os.path.join(base_dir, "results")
 plots_dir = os.path.join(results_dir, "plots")
@@ -26,11 +26,11 @@ gridsearch_dir = os.path.join(results_dir, "gridsearch")
 os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
-# === Load best hybrid hyperparameters ===
+# === load best hybrid hyperparameters ===
 with open(os.path.join(gridsearch_dir, "best_hyperparams.json"), "r") as f:
     best_params = json.load(f)
 
-# === Config ===
+# === config ===
 benchmark_funcs = {
     "rosenbrock": (rosenbrock, grad_rosenbrock, 0.0, np.array([1.0, 1.0])),
     "rastrigin": (rastrigin, grad_rastrigin, 0.0, np.array([0.0, 0.0])),
@@ -59,7 +59,7 @@ def plot_best_hybrid_convergence(name, f_histories, f):
 
 for ascent_method in ["unif", "ascent"] : 
 
-    # === Run Hybrid SA-GD with Best Params ===
+    # === run hybrid SA-GD with best params ===
     for name, (f, grad_f, f_star, x_star) in benchmark_funcs.items():
         print(f"\n==== Running Hybrid SA-GD on {name.upper()} ====")
 

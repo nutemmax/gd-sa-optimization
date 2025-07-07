@@ -10,7 +10,7 @@ from src.optimizers.sa import sa_continuous
 from src.optimizers.gd import gradient_descent
 from src.utils.utils_experiments import bootstrap_experiment_benchmarks, get_experiment_id, generate_summary_csv
 
-# Paths
+# paths
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 analytical_dir = os.path.join(base_dir, "results", "analytical")
 plots_dir = os.path.join(base_dir, "results", "plots")

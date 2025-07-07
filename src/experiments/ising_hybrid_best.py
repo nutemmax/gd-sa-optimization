@@ -14,7 +14,7 @@ from src.problems.ising import relaxed_ising_energy, grad_relaxed_ising
 from src.utils.utils_experiments import bootstrap_experiment_ising, get_experiment_id, generate_summary_csv
 from src.utils.utils_plots import plot_energy_trajectory
 
-# === Paths ===
+# === paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 results_dir = os.path.join(base_dir, "results")
 plots_dir = os.path.join(results_dir, "plots")
@@ -23,7 +23,7 @@ gridsearch_dir = os.path.join(results_dir, "gridsearch")
 os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
-# === Load best hybrid hyperparameters for ising_relaxed (from hybrid-unif)
+# === load best hybrid hyperparameters for ising_relaxed (from hybrid-unif)
 with open(os.path.join(gridsearch_dir, "best_hyperparams.json")) as f:
     best_params = json.load(f)
 
@@ -32,7 +32,7 @@ lr = params["lr"]
 sigma = params["sigma"]
 T0 = params["T0"]
 
-# === Shared settings ===
+# === shared settings ===
 num_runs = 30
 tol = 1e-6
 lattice_shape = (10, 10)
@@ -46,7 +46,7 @@ x_inits = [np.random.uniform(-1, 1, size=lattice_shape) for _ in range(num_runs)
 x_inits_flat = [x.flatten() for x in x_inits]
 
 for ascent_method in ["ascent", "unif"]:
-    print(f"\n🚀 Running Hybrid SA-GD (best) with ascent_method = {ascent_method}")
+    print(f"\nRunning Hybrid SA-GD (best) with ascent_method = {ascent_method}")
 
     results = bootstrap_experiment_ising(
         algorithm_function=sa_gd_hybrid,
@@ -90,4 +90,4 @@ for ascent_method in ["ascent", "unif"]:
     plt.savefig(os.path.join(plots_dir, filename))
     plt.close()
 
-print("\n✅ All hybrid best-param experiments on relaxed Ising complete.")
+print("\nAll hybrid best-param experiments on relaxed Ising complete.")

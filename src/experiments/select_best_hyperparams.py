@@ -2,7 +2,7 @@ import os
 import json
 import pandas as pd
 
-# === Setup ===
+# === setup ===
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 FINAL_DIR = os.path.join(ROOT_DIR, 'results', 'gridsearch', 'final')
 OUTPUT_PATH = os.path.join(FINAL_DIR, 'best_hyperparams.json')
@@ -10,8 +10,8 @@ OUTPUT_PATH = os.path.join(FINAL_DIR, 'best_hyperparams.json')
 benchmarks = ['rosenbrock', 'rastrigin', 'ackley']
 ising_variants = ['ising_relaxed', 'ising_discrete']
 
-# === Hybrid ascent variants ===
-hybrid_methods = ['unif', 'ascent']  # 'unif' = random perturbation, 'ascent' = gradient ascent
+# === hybrid ascent variants ===
+hybrid_methods = ['unif', 'ascent']  # 'unif' = random perturbation (SAGDP), 'ascent' = gradient ascent (SAGDA)
 
 def load_best_config(path, select_by="rmse"):
     df = pd.read_csv(path)
@@ -19,10 +19,10 @@ def load_best_config(path, select_by="rmse"):
         raise ValueError(f"No '{select_by}' column found in {path}")
     return df.loc[df[select_by].idxmin()].to_dict()
 
-# === Select best hyperparams ===
+# === select best hyperparams ===
 best_params = {}
 
-# --- Benchmarks ---
+# benchmarks 
 for benchmark in benchmarks:
     best_params[benchmark] = {}
 
@@ -36,7 +36,7 @@ for benchmark in benchmarks:
             print(f"Missing: {path}")
             best_params[benchmark][algo] = "Gridsearch not found"
 
-    # Hybrid variants
+    # hybrid variants
     for method in hybrid_methods:
         key = f"hybrid-{method}"
         filename = f"gridsearch_hybrid-{method}_{benchmark}_new.csv"
@@ -47,7 +47,7 @@ for benchmark in benchmarks:
             print(f"Missing: {path}")
             best_params[benchmark][key] = "Gridsearch not found"
 
-# --- Ising variants ---
+# Ising variants
 best_params['ising'] = {}
 for variant in ising_variants:
     best_params['ising'][variant] = {}
@@ -71,7 +71,7 @@ for variant in ising_variants:
             print(f"Missing: {gd_path}")
             best_params['ising'][variant]['gd'] = "Gridsearch not found"
 
-        # Hybrid variants
+        # hybrid variants
         for method in hybrid_methods:
             key = f"hybrid-{method}"
             hybrid_filename = f"gridsearch_hybrid-{method}_ising_relaxed_new.csv"
@@ -82,7 +82,7 @@ for variant in ising_variants:
                 print(f"Missing: {hybrid_path}")
                 best_params['ising'][variant][key] = "Gridsearch not found"
 
-# === Save JSON ===
+# === save JSON ===
 os.makedirs(FINAL_DIR, exist_ok=True)
 with open(OUTPUT_PATH, 'w') as f:
     json.dump(best_params, f, indent=4)

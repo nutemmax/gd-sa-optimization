@@ -14,7 +14,7 @@ from src.problems.ising import ising_energy, relaxed_ising_energy, grad_relaxed_
 from src.utils.utils_plots import plot_spin_evolution, plot_energy_trajectory, plot_final_spin_config
 from src.utils.utils_experiments import bootstrap_experiment_ising, get_experiment_id, evaluate_ising_results, generate_summary_csv
 
-# === Paths ===
+# === paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 results_dir = os.path.join(base_dir, "results")
 plots_dir = os.path.join(results_dir, "plots")
@@ -22,14 +22,14 @@ analytical_dir = os.path.join(results_dir, "analytical")
 os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
-# === Shared settings ===
+# === shared settings ===
 num_runs = 50
 tol = 1e-6
 lattice_shape = (10, 10)
 experiment_id = get_experiment_id()
 dim_ising = lattice_shape[0]
 
-# === Baseline Hyperparameters ===
+# === baseline hyperparameters ===
 sa_disc_params = {"T_init": 50.0, "alpha": 0.99, "max_iter": 20000, "tol": tol}
 sa_cont_params = {
     "T0": 50.0, "alpha": 0.99, "step_size": 0.1, "max_iter": 20000, "tol": tol,
@@ -56,7 +56,7 @@ def plot_combined_convergence(name, sa_histories, gd_histories, relaxed_f):
     plt.close()
 
 def run_experiments():
-    # === Discrete Ising ===
+    # === discrete ising ===
     print("Running SA on discrete Ising")
     x_inits_disc = [np.random.choice([-1, 1], size=lattice_shape) for _ in range(num_runs)]
 
@@ -85,7 +85,7 @@ def run_experiments():
         index=False
     )
 
-    # === Relaxed Ising ===
+    # === relaxed ising ===
     print("Running SA and GD on relaxed Ising")
     x_inits_cont = [np.random.uniform(-1, 1, size=lattice_shape) for _ in range(num_runs)]
     x_inits_flat = [x.flatten() for x in x_inits_cont]

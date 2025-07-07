@@ -8,8 +8,8 @@ This repository contains the code and experiments for a comparative study of Sim
   - Gradient Descent (GD)
   - Simulated Annealing (SA): continuous and discrete variants
   - Hybrid SA-GD:
-    - `"ascent"`: deterministic gradient ascent steps
-    - `"unif"`: random uniform perturbation steps
+    - `"ascent"`: deterministic gradient ascent steps (SAGDA)
+    - `"unif"`: random uniform perturbation steps (SAGDP)
 
 - **Problems:**
   - Benchmark functions: Rosenbrock, Rastrigin, Ackley
@@ -19,9 +19,10 @@ This repository contains the code and experiments for a comparative study of Sim
   - Neural network training: binary classification on the UCI Wine Quality dataset
 
 - **Experiments:**
-  - Baseline: using fixed hyperparameters
+Experiments are conducted by testing all algorithms on the problems listed above, in both the baseline and best settings.
+
+  - Baseline: using fixed hyperparameters, chosen as reasonable starting points
   - Best: using grid-searched optimal hyperparameters
-  - Hybrid: evaluated in both baseline and best settings
   - All experiments are bootstrapped over 50 runs
 
 ## Structure
@@ -29,12 +30,12 @@ This repository contains the code and experiments for a comparative study of Sim
 The main components are:
 
 - `src/optimizers/`: core implementations of GD, SA, and Hybrid algorithms
-  - also includes `gd_nn.py` and `sa_nn.py` for using GD/SA to train neural networks
+  - also includes `gd_nn.py` and `sa_nn.py` for using GD/SA as optimizers for training neural networks
 - `src/problems/`: objective functions for benchmarks, Ising, and helper functions for neural networks
-- `src/experiments/`: scripts to run all experiments (baseline, best, hybrid)
+- `src/experiments/`: scripts to run all experiments (GD, SA and hybrid algorithms) on both baseline and best setting
 - `src/utils/`: utilities for experiment bootstrapping, evaluation, and plotting
 - `results/`: stores all result CSVs, plots, and selected hyperparameters
-- `notebooks/`: Jupyter notebooks for grid search and additional analyses
+- `notebooks/`: Jupyter notebooks for grid search and additional analyses; NNs trained with GD/SA-based optimizers on Wine Quality dataset
 
 ## Usage
 
@@ -74,14 +75,13 @@ python src/experiments/ising_hybrid_best.py
 
 ## Notebooks
 - `benchmarks_gridsearch.ipynb` and `ising_gridsearch.ipynb`: hyperparameter tuning via grid search
-- `nn_experiments.ipynb`: train a simple neural network using GD and SA on the UCI Wine Quality dataset
+- `nn_experiments.ipynb`: train a simple neural network using GD and SA as optimizers on a binary classification task on the UCI Wine Quality dataset
 
 ## Output
 
-- CSV summaries: `results/analytical/`
-- Convergence and energy plots: `results/plots/`
-- Finalized experiment outputs and plots: `results/analytical/final/` and `results/plots/final/`
-- Grid search logs and selected parameters: results/gridsearch/
+- CSV summaries: `results/analytical/final/`
+- Convergence and energy plots: `results/plots/final/`
+- Grid search logs and selected parameters: `results/gridsearch/`
 
 ## Notes
 

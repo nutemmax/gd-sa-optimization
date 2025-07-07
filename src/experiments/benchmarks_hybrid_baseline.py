@@ -16,7 +16,7 @@ from src.optimizers.hybrid import sa_gd_hybrid
 from src.utils.utils_experiments import bootstrap_experiment_benchmarks, get_experiment_id, generate_summary_csv
 from src.utils.utils_plots import plot_energy_trajectory, plot_final_spin_config
 
-# === Paths ===
+# === paths ===
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 results_dir = os.path.join(base_dir, "results")
 plots_dir = os.path.join(results_dir, "plots")
@@ -24,7 +24,7 @@ analytical_dir = os.path.join(results_dir, "analytical")
 os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(analytical_dir, exist_ok=True)
 
-# === Config ===
+# === config ===
 benchmark_funcs = {
     "rosenbrock": (rosenbrock, grad_rosenbrock, 0.0, np.array([1.0, 1.0])),
     "rastrigin": (rastrigin, grad_rastrigin, 0.0, np.array([0.0, 0.0])),
@@ -60,7 +60,7 @@ def plot_best_hybrid_convergence(name, f_histories, f):
     plt.close()
 
 for ascent_method in ["unif", "ascent"] : 
-    # === Run Hybrid SA-GD ===
+    # === run hybrid SA-GD ===
     for name, (f, grad_f, f_star, x_star) in benchmark_funcs.items():
         print(f"\n==== Running Hybrid SA-GD on {name.upper()} ====")
 
@@ -91,7 +91,7 @@ for ascent_method in ["unif", "ascent"] :
             **baseline_params
         )
 
-        # Save CSV summary
+        # save CSV summary
         generate_summary_csv(
             f"{name}_hybrid-{ascent_method}_baseline_parameters",
             sa_stats=None,
@@ -102,7 +102,7 @@ for ascent_method in ["unif", "ascent"] :
             name_alg = f"SA-GD-{ascent_method}"
         )
 
-        # Plot best convergence
+        # plot best convergence
         plot_best_hybrid_convergence(
             name=name,
             f_histories=output["f_histories"],
